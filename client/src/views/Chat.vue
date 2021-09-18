@@ -1,0 +1,178 @@
+<script setup lang="ts">
+import Loader from "../components/Loader.vue";
+import { onMounted, ref } from "@vue/runtime-core";
+import { useRouter } from "vue-router";
+import { Message } from "../@types";
+import gState from "../store";
+
+const router = useRouter();
+const isMatched = ref<Boolean>(false);
+const message = ref<string>("");
+const messagesContainer = ref<HTMLDivElement>(null!);
+const messages = ref<Message[]>([]);
+
+async function handleSend() {
+  if (!message.value || !message.value.trim()) return;
+  console.log("sending ", message.value);
+
+  gState.IO.emit("message", message.value);
+  messages.value.push({ content: message.value, isAuthor: true });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  message.value = "";
+}
+
+onMounted(() => {
+  if (!gState.IO.id) {
+    router.push("/");
+    return;
+  }
+  gState.IO.emit("connectNewUser");
+  gState.IO.on("matchSuccess", () => {
+    isMatched.value = true;
+  });
+  gState.IO.on("newMessage", async (newMessage: string) => {
+    console.log("msg recieved", newMessage);
+    messages.value.push({ content: newMessage, isAuthor: false });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  });
+});
+</script>
+<template>
+  <section class="section-loader" v-if="!isMatched">
+    <Loader /><small>trying to find you the right person...</small>
+  </section>
+  <section class="section-chat-dashboard" v-else>
+    <div class="section-messages">
+      <div class="messages-container" ref="messagesContainer">
+        <p class="message-placeholder" v-if="!messages.length">
+          You're now chatting with a random stranger
+        </p>
+        <div
+          class="message"
+          :class="{ author: message.isAuthor }"
+          v-for="(message, index) in messages"
+          :key="index"
+        >
+          <div class="message__content">
+            {{ message.content }}
+          </div>
+        </div>
+      </div>
+      <div class="message-input">
+        <input
+          type="text"
+          v-model="message"
+          @keyup.enter="handleSend"
+          placeholder="Message..."
+        />
+        <span class="send-arrow" @click="handleSend"
+          ><i class="far fa-paper-plane"></i
+        ></span>
+        <!-- <button @click="handleSend">send</button> -->
+      </div>
+    </div>
+
+    <div class="section-video"></div>
+  </section>
+</template>
+
+<style lang="scss">
+.section-loader {
+  height: 100%;
+  color: $tertiary;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.section-chat-dashboard {
+  height: 100%;
+  display: flex;
+}
+.section-messages {
+  background: $secondary;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .messages-container {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    scrollbar-color: light;
+    scrollbar-width: thin;
+  }
+  .message-input {
+    margin-bottom: 2rem;
+    text-align: center;
+    position: relative;
+    .send-arrow {
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: white;
+      position: absolute;
+      top: 50%;
+      right: 10%;
+      transform: translateY(-50%);
+      &:active i {
+        transform: scale(0.8);
+      }
+    }
+    input {
+      color: $tertiary;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      width: 90%;
+      background: $secondary;
+      border: 2px solid white;
+      padding: 0.6rem 0.75rem;
+      outline: none;
+      &:focus {
+        outline: 0.5px solid white;
+      }
+      &::placeholder {
+        color: white;
+        font-weight: bold;
+      }
+    }
+  }
+}
+.message-placeholder {
+  padding: 1rem;
+}
+.message {
+  display: flex;
+  justify-content: flex-start;
+  font-size: 0.9rem;
+  margin: 1.4rem 0;
+
+  .message__content {
+    border-radius: 12px;
+    margin: 0 1rem;
+    padding: 0.4rem 0.8rem;
+    background: $tertiary;
+    color: white;
+  }
+  &.author {
+    justify-content: flex-end;
+    .message__content {
+      background: white;
+      color: $tertiary;
+    }
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .section-chat-dashboard {
+    flex-direction: column-reverse;
+    .section-messages {
+      width: 100%;
+      .message-input {
+        margin: 1rem 0;
+      }
+    }
+  }
+}
+</style>
