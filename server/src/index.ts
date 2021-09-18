@@ -41,5 +41,8 @@ io.on("connection", (socket) => {
   socket.on("message", (message) => {
     socket.to(rooms[socket.id]).emit("newMessage", message);
   });
+  socket.on("disonnect", () => {
+    delete rooms[socket.id];
+  });
 });
 httpServer.listen(port, () => console.log(`listening at port ${port}`));
