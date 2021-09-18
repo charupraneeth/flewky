@@ -110,7 +110,7 @@ onMounted(() => {
     position: relative;
     .send-arrow {
       cursor: pointer;
-      font-size: 1.2rem;
+      font-size: 1.75rem;
       color: white;
       position: absolute;
       top: 50%;
@@ -169,6 +169,7 @@ onMounted(() => {
     flex-direction: column-reverse;
     .section-messages {
       width: 100%;
+      overflow-y: auto;
       .message-input {
         margin: 1rem 0;
       }
