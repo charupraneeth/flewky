@@ -12,27 +12,37 @@ const io = new Server(httpServer, {
   },
 });
 
-const unmatchedUsers: Socket[] = [];
+interface RoomMap {
+  [socketId: string]: string;
+}
 
-const rooms: any = {};
+const unmatchedUsers: Map<string, Socket> = new Map();
+
+const rooms: RoomMap = {};
 
 function matchUser(socket: Socket) {
-  if (!unmatchedUsers.length) {
-    unmatchedUsers.push(socket);
+  if (!unmatchedUsers.size) {
+    unmatchedUsers.set(socket.id, socket);
     return;
   }
-  const roomId = unmatchedUsers[0].id + "#" + socket.id;
+
+  const iterator = unmatchedUsers.values();
+  const unmatchedUser: Socket = iterator.next().value;
+  if (unmatchedUser.id === socket.id) return;
+  const roomId = unmatchedUser.id + "#" + socket.id;
   socket.join(roomId);
-  unmatchedUsers[0].join(roomId);
+  unmatchedUser.join(roomId);
   io.to(roomId).emit("matchSuccess");
+  console.log("joined", unmatchedUser.id, socket.id, roomId);
+
   rooms[socket.id] = roomId;
-  rooms[unmatchedUsers[0].id] = roomId;
-  unmatchedUsers.shift();
+  rooms[unmatchedUser.id] = roomId;
+  unmatchedUsers.delete(unmatchedUser.id);
 }
 
 io.on("connection", (socket) => {
   console.log(`socketd connected `, socket.id);
-  console.log(io.sockets.allSockets());
+  console.log("all sockets", io.sockets.allSockets());
 
   socket.on("connectNewUser", () => {
     matchUser(socket);
@@ -41,8 +51,11 @@ io.on("connection", (socket) => {
   socket.on("message", (message) => {
     socket.to(rooms[socket.id]).emit("newMessage", message);
   });
-  socket.on("disonnect", () => {
+  socket.on("disconnect", () => {
+    console.log("disconnected", socket.id);
+
     delete rooms[socket.id];
+    unmatchedUsers.delete(socket.id);
   });
 });
 httpServer.listen(port, () => console.log(`listening at port ${port}`));
