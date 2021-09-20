@@ -22,6 +22,8 @@ async function handleSend() {
   console.log("sending ", message.value);
 
   gState.IO.emit("message", message.value);
+  gState.IO.emit("typing", false);
+
   messages.value.push({ content: message.value, isAuthor: true });
   await new Promise((resolve) => setTimeout(resolve, 100));
   messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
@@ -32,12 +34,12 @@ watch(
   () => message.value,
   () => {
     console.log("mesage changed");
-
+    if (!message.value || !message.value.trim()) return;
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => {
-      gState.IO.emit && gState.IO.emit("typing");
+      gState.IO.emit && gState.IO.emit("typing", true);
       console.log("typiing emitted");
-    }, 300);
+    }, 250);
   }
   // { immediate: true }
 );
@@ -53,16 +55,17 @@ onMounted(() => {
   });
   gState.IO.on("newMessage", async (newMessage: string) => {
     console.log("msg recieved", newMessage);
+    isStrangerTyping.value = false;
     messages.value.push({ content: newMessage, isAuthor: false });
     await new Promise((resolve) => setTimeout(resolve, 100));
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   });
-  gState.IO.on("typing", () => {
+  gState.IO.on("typing", (typingState: boolean) => {
+    isStrangerTyping.value = typingState;
     clearTimeout(isTypingTimeout);
-    isStrangerTyping.value = true;
     isTypingTimeout = setTimeout(() => {
       isStrangerTyping.value = false;
-    }, 1500);
+    }, 800);
   });
 });
 

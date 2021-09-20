@@ -52,8 +52,10 @@ io.on("connection", (socket) => {
     socket.to(rooms[socket.id]).emit("newMessage", message);
   });
 
-  socket.on("typing", () => {
-    socket.to(rooms[socket.id]).emit("typing");
+  socket.on("typing", (isTyping: boolean) => {
+    if (isTyping === true || isTyping === false) {
+      socket.to(rooms[socket.id]).emit("typing", isTyping);
+    }
   });
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
