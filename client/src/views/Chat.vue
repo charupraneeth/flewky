@@ -109,7 +109,7 @@ onUnmounted(() => {
     scrollbar-width: thin;
   }
   .message-input {
-    margin-bottom: 2rem;
+    margin-bottom: 0.5rem;
     text-align: center;
     display: flex;
     padding: 0.5rem;
