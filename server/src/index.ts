@@ -53,9 +53,8 @@ io.on("connection", (socket) => {
   });
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
-
-    delete rooms[socket.id];
     unmatchedUsers.delete(socket.id);
+    delete rooms[socket.id];
   });
 });
 httpServer.listen(port, () => console.log(`listening at port ${port}`));

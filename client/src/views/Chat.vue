@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Loader from "../components/Loader.vue";
-import { onMounted, ref } from "@vue/runtime-core";
+import { onMounted, onUnmounted, ref } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { Message } from "../@types";
 import gState from "../store";
@@ -37,6 +37,10 @@ onMounted(() => {
     await new Promise((resolve) => setTimeout(resolve, 100));
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   });
+});
+
+onUnmounted(() => {
+  gState.IO.disconnect();
 });
 </script>
 <template>
