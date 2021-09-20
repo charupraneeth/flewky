@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import Loader from "../components/Loader.vue";
-import { onMounted, onUnmounted, ref } from "@vue/runtime-core";
+import TypingPlaceholder from "../components/TypingPlaceholder.vue";
+
+import { onMounted, onUnmounted, ref, watch } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { Message } from "../@types";
 import gState from "../store";
 
 const router = useRouter();
 const isMatched = ref<Boolean>(false);
+const isStrangerTyping = ref(false);
 const message = ref<string>("");
 const messagesContainer = ref<HTMLDivElement>(null!);
 const messages = ref<Message[]>([]);
+
+let debounceTimeout: ReturnType<typeof setTimeout>;
+let isTypingTimeout: ReturnType<typeof setTimeout>;
 
 async function handleSend() {
   if (!message.value || !message.value.trim()) return;
@@ -21,6 +27,20 @@ async function handleSend() {
   messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   message.value = "";
 }
+
+watch(
+  () => message.value,
+  () => {
+    console.log("mesage changed");
+
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+      gState.IO.emit && gState.IO.emit("typing");
+      console.log("typiing emitted");
+    }, 300);
+  }
+  // { immediate: true }
+);
 
 onMounted(() => {
   if (!gState.IO.id) {
@@ -36,6 +56,13 @@ onMounted(() => {
     messages.value.push({ content: newMessage, isAuthor: false });
     await new Promise((resolve) => setTimeout(resolve, 100));
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  });
+  gState.IO.on("typing", () => {
+    clearTimeout(isTypingTimeout);
+    isStrangerTyping.value = true;
+    isTypingTimeout = setTimeout(() => {
+      isStrangerTyping.value = false;
+    }, 1500);
   });
 });
 
@@ -63,7 +90,9 @@ onUnmounted(() => {
             {{ message.content }}
           </div>
         </div>
+        <typing-placeholder v-if="isStrangerTyping" />
       </div>
+
       <div class="message-input">
         <input
           type="text"

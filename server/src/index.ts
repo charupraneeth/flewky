@@ -51,6 +51,10 @@ io.on("connection", (socket) => {
   socket.on("message", (message) => {
     socket.to(rooms[socket.id]).emit("newMessage", message);
   });
+
+  socket.on("typing", () => {
+    socket.to(rooms[socket.id]).emit("typing");
+  });
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
     unmatchedUsers.delete(socket.id);
