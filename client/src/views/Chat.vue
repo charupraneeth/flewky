@@ -40,7 +40,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  gState.IO.disconnect();
+  gState.IO.disconnect && gState.IO.disconnect();
 });
 </script>
 <template>
@@ -111,15 +111,19 @@ onUnmounted(() => {
   .message-input {
     margin-bottom: 2rem;
     text-align: center;
-    position: relative;
+    display: flex;
+    padding: 0.5rem;
+
     .send-arrow {
+      margin-left: 0.5rem;
       cursor: pointer;
       font-size: 1.75rem;
       color: white;
-      position: absolute;
-      top: 50%;
-      right: 10%;
-      transform: translateY(-50%);
+      background: $tertiary;
+      padding: 0.5rem;
+
+      border-radius: 50%;
+
       &:active i {
         transform: scale(0.8);
       }
@@ -150,9 +154,12 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-start;
   font-size: 0.9rem;
-  margin: 1.4rem 0;
+  margin: 1.4rem 2rem 1.4rem 0rem;
 
   .message__content {
+    line-height: 1.25rem;
+    word-spacing: 0.1rem;
+    letter-spacing: 0.0125rem;
     border-radius: 12px;
     margin: 0 1rem;
     padding: 0.4rem 0.8rem;
@@ -160,6 +167,7 @@ onUnmounted(() => {
     color: white;
   }
   &.author {
+    margin: 1.4rem 0 1.4rem 2rem;
     justify-content: flex-end;
     .message__content {
       background: white;
