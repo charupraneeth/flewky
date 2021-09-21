@@ -6,6 +6,7 @@ import { onMounted, onUnmounted, ref, watch } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { Message } from "../@types";
 import gState from "../store";
+import { iceServers, mediaConstraints } from "./consts";
 
 const router = useRouter();
 const isMatched = ref<Boolean>(false);
@@ -13,6 +14,12 @@ const isStrangerTyping = ref(false);
 const message = ref<string>("");
 const messagesContainer = ref<HTMLDivElement>(null!);
 const messages = ref<Message[]>([]);
+const userVideo = ref<HTMLVideoElement>(null as any);
+const strangerVideo = ref<HTMLVideoElement>(null as any);
+
+let localStream: MediaStream;
+let remoteStream: MediaStream;
+let rtcPeerConnection: RTCPeerConnection;
 
 let debounceTimeout: ReturnType<typeof setTimeout>;
 let isTypingTimeout: ReturnType<typeof setTimeout>;
@@ -43,6 +50,51 @@ watch(
   }
   // { immediate: true }
 );
+async function setLocalStream(mediaConstraints: any) {
+  let stream: MediaStream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    localStream = stream;
+    userVideo.value.srcObject = stream;
+  } catch (error) {
+    console.error("Could not get user media", error);
+  }
+}
+
+function addLocalTracks(rtcPeerConnection: RTCPeerConnection) {
+  localStream.getTracks().forEach((track) => {
+    rtcPeerConnection.addTrack(track, localStream);
+  });
+}
+
+async function createOffer(rtcPeerConnection: RTCPeerConnection) {
+  let sessionDescription;
+  try {
+    sessionDescription = await rtcPeerConnection.createOffer();
+    rtcPeerConnection.setLocalDescription(sessionDescription);
+  } catch (error) {
+    console.error(error);
+  }
+
+  gState.IO.emit("webrtc_offer", {
+    type: "webrtc_offer",
+    sdp: sessionDescription,
+  });
+}
+
+function setRemoteStream(event: RTCTrackEvent) {
+  strangerVideo.value.srcObject = event.streams[0];
+  // remoteStream = event.stream;
+}
+
+function sendIceCandidate(event: RTCPeerConnectionIceEvent) {
+  if (event.candidate) {
+    gState.IO.emit("webrtc_ice_candidate", {
+      label: event.candidate.sdpMLineIndex,
+      candidate: event.candidate.candidate,
+    });
+  }
+}
 
 onMounted(() => {
   if (!gState.IO.id) {
@@ -50,8 +102,17 @@ onMounted(() => {
     return;
   }
   gState.IO.emit("connectNewUser");
-  gState.IO.on("matchSuccess", () => {
+  gState.IO.on("matchSuccess", async (creatorId: string) => {
     isMatched.value = true;
+    await setLocalStream(mediaConstraints);
+
+    if (creatorId === gState.IO.id) {
+      rtcPeerConnection = new RTCPeerConnection(iceServers);
+      addLocalTracks(rtcPeerConnection);
+      rtcPeerConnection.ontrack = setRemoteStream;
+      rtcPeerConnection.onicecandidate = sendIceCandidate;
+      await createOffer(rtcPeerConnection);
+    }
   });
   gState.IO.on("newMessage", async (newMessage: string) => {
     console.log("msg recieved", newMessage);
@@ -110,7 +171,14 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div class="section-video"></div>
+    <div class="section-video">
+      <div class="video-container">
+        <video ref="userVideo"></video>
+      </div>
+      <div class="video-container">
+        <video ref="strangerVideo"></video>
+      </div>
+    </div>
   </section>
 </template>
 
