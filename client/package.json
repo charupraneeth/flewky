@@ -3,18 +3,17 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite --host",
+    "devS": "vite --host --https",
     "build": "vue-tsc --noEmit && vite build",
-    "serve": "vite preview --host"
+    "serve": "vite preview --host --https"
   },
   "dependencies": {
-    "simple-peer": "^9.11.0",
     "socket.io-client": "^4.2.0",
     "vue": "^3.2.6",
     "vue-router": "^4.0.11"
   },
   "devDependencies": {
     "@types/node": "^16.9.2",
-    "@types/simple-peer": "^9.11.3",
     "@vitejs/plugin-vue": "^1.6.1",
     "@vue/compiler-sfc": "^3.2.6",
     "sass": "^1.41.1",

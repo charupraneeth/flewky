@@ -5,14 +5,18 @@ import gState from "../store/index";
 
 const router = useRouter();
 function handleConnect() {
-  const ioObject: Socket = io(import.meta.env.VITE_SERVER_URL, {
-    transports: ["websocket", "polling"],
-  });
-  gState.IO = ioObject;
+  try {
+    const ioObject: Socket = io(import.meta.env.VITE_SERVER_URL, {
+      transports: ["websocket"],
+    });
+    gState.IO = ioObject;
 
-  gState.IO.on("connect", () => {
-    router.push("/app");
-  });
+    gState.IO.on("connect", () => {
+      router.push("/app");
+    });
+  } catch (error) {
+    console.log(error);
+  }
 }
 </script>
 <template>

@@ -2,11 +2,17 @@
 import Loader from "../components/Loader.vue";
 import TypingPlaceholder from "../components/TypingPlaceholder.vue";
 
-import { onMounted, onUnmounted, ref, watch } from "@vue/runtime-core";
+import {
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+  watchEffect,
+} from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { Message } from "../@types";
 import gState from "../store";
-import { iceServers, mediaConstraints } from "./consts";
+// import { iceConfig } from "../consts";
 
 const router = useRouter();
 const isMatched = ref<Boolean>(false);
@@ -14,12 +20,16 @@ const isStrangerTyping = ref(false);
 const message = ref<string>("");
 const messagesContainer = ref<HTMLDivElement>(null!);
 const messages = ref<Message[]>([]);
-const userVideo = ref<HTMLVideoElement>(null as any);
-const strangerVideo = ref<HTMLVideoElement>(null as any);
+
+const iceCandidates: RTCIceCandidate[] = [];
 
 let localStream: MediaStream;
-let remoteStream: MediaStream;
-let rtcPeerConnection: RTCPeerConnection;
+let remoteStream: MediaStream = new MediaStream();
+
+let pc: RTCPeerConnection;
+
+const localVideoEl = ref<HTMLVideoElement>(null as any);
+const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
 let debounceTimeout: ReturnType<typeof setTimeout>;
 let isTypingTimeout: ReturnType<typeof setTimeout>;
@@ -50,68 +60,56 @@ watch(
   }
   // { immediate: true }
 );
-async function setLocalStream(mediaConstraints: any) {
-  let stream: MediaStream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
-    localStream = stream;
-    userVideo.value.srcObject = stream;
-  } catch (error) {
-    console.error("Could not get user media", error);
-  }
-}
+const configuration = {
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+};
 
-function addLocalTracks(rtcPeerConnection: RTCPeerConnection) {
-  localStream.getTracks().forEach((track) => {
-    rtcPeerConnection.addTrack(track, localStream);
-  });
-}
-
-async function createOffer(rtcPeerConnection: RTCPeerConnection) {
-  let sessionDescription;
-  try {
-    sessionDescription = await rtcPeerConnection.createOffer();
-    rtcPeerConnection.setLocalDescription(sessionDescription);
-  } catch (error) {
-    console.error(error);
-  }
-
-  gState.IO.emit("webrtc_offer", {
-    type: "webrtc_offer",
-    sdp: sessionDescription,
-  });
-}
-
-function setRemoteStream(event: RTCTrackEvent) {
-  strangerVideo.value.srcObject = event.streams[0];
-  // remoteStream = event.stream;
-}
-
-function sendIceCandidate(event: RTCPeerConnectionIceEvent) {
+pc = new RTCPeerConnection(configuration);
+pc.addEventListener("icecandidate", (event) => {
+  console.log("gen candidate ", event.candidate);
   if (event.candidate) {
-    gState.IO.emit("webrtc_ice_candidate", {
-      label: event.candidate.sdpMLineIndex,
-      candidate: event.candidate.candidate,
-    });
+    gState.IO.emit("iceCandidate", event.candidate);
   }
-}
+});
 
-onMounted(() => {
+onMounted(async () => {
   if (!gState.IO.id) {
     router.push("/");
     return;
   }
-  gState.IO.emit("connectNewUser");
-  gState.IO.on("matchSuccess", async (creatorId: string) => {
-    isMatched.value = true;
-    await setLocalStream(mediaConstraints);
+  const offer = await pc.createOffer();
+  console.log(offer);
+  await pc.setLocalDescription(offer);
+  console.log("offer set as LD");
 
-    if (creatorId === gState.IO.id) {
-      rtcPeerConnection = new RTCPeerConnection(iceServers);
-      addLocalTracks(rtcPeerConnection);
-      rtcPeerConnection.ontrack = setRemoteStream;
-      rtcPeerConnection.onicecandidate = sendIceCandidate;
-      await createOffer(rtcPeerConnection);
+  localStream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true,
+  });
+
+  localStream.getTracks().forEach((track) => {
+    pc.addTrack(track, localStream);
+  });
+
+  pc.addEventListener("track", async (event) => {
+    console.log("got some tracks");
+    remoteStream.addTrack(event.track);
+  });
+
+  pc.addEventListener("connectionstatechange", (event) => {
+    console.log("no hey");
+
+    if (pc.connectionState === "connected") {
+      // Peers connected!
+      console.log("hye connected");
+    }
+  });
+
+  gState.IO.emit("connectNewUser");
+  gState.IO.on("matchSuccess", async (initiatorId: string) => {
+    isMatched.value = true;
+    if (initiatorId === gState.IO.id) {
+      gState.IO.emit("offer", offer);
     }
   });
   gState.IO.on("newMessage", async (newMessage: string) => {
@@ -127,6 +125,44 @@ onMounted(() => {
     isTypingTimeout = setTimeout(() => {
       isStrangerTyping.value = false;
     }, 800);
+  });
+  gState.IO.on("newAnswer", async (newOffer: RTCSessionDescriptionInit) => {
+    console.log("got new answer");
+    const remoteDescription = new RTCSessionDescription(newOffer);
+    await pc.setRemoteDescription(remoteDescription);
+    console.log("description set from answer");
+  });
+
+  gState.IO.on("newOffer", async (newOffer: RTCSessionDescriptionInit) => {
+    console.log("got new offer");
+    pc.setRemoteDescription(new RTCSessionDescription(newOffer));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    console.log("description set from offer");
+    gState.IO.emit("answer", answer);
+    console.log("emitted answer");
+  });
+  gState.IO.on("newIceCandidate", async (newIceCandidate) => {
+    try {
+      await pc.addIceCandidate(newIceCandidate);
+    } catch (e) {
+      console.error("Error adding received ice candidate", e);
+    }
+  });
+
+  watchEffect(async () => {
+    if (localVideoEl.value) {
+      localVideoEl.value.srcObject = localStream;
+      localVideoEl.value.muted = true;
+      await localVideoEl.value.play();
+      console.log("local played");
+    }
+    if (remoteVideoEl.value) {
+      remoteVideoEl.value.srcObject = remoteStream;
+      remoteVideoEl.value.muted = true;
+      // await remoteVideoEl.value.play();
+      console.log("remote played");
+    }
   });
 });
 
@@ -173,10 +209,10 @@ onUnmounted(() => {
 
     <div class="section-video">
       <div class="video-container">
-        <video ref="userVideo"></video>
+        <video ref="localVideoEl" class="local-video"></video>
       </div>
       <div class="video-container">
-        <video ref="strangerVideo"></video>
+        <video ref="remoteVideoEl"></video>
       </div>
     </div>
   </section>
@@ -194,6 +230,20 @@ onUnmounted(() => {
 .section-chat-dashboard {
   height: 100%;
   display: flex;
+}
+
+.section-video {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  .video-container {
+    video {
+      width: 100%;
+      padding: 1rem;
+      height: 80%;
+    }
+  }
 }
 .section-messages {
   background: $secondary;

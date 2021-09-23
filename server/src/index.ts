@@ -1,12 +1,32 @@
 import express from "express";
-import { createServer } from "http";
+
+import https from "https";
+import http from "http";
 import { Server, Socket } from "socket.io";
+import { readFileSync } from "fs";
+import { config } from "dotenv";
+import path from "path";
+config({ path: path.join(__dirname, "../.env") });
 
 const port = process.env.PORT || 1337;
 
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
+
+let server;
+const inDev = process.env.NODE_ENV === "development";
+
+if (inDev) {
+  server = https.createServer(
+    {
+      key: readFileSync("certificates/key.pem"),
+      cert: readFileSync("certificates/cert.pem"),
+    },
+    app
+  );
+} else {
+  server = http.createServer(app);
+}
+const io = new Server(server, {
   cors: {
     origin: "*",
   },
@@ -32,7 +52,7 @@ function matchUser(socket: Socket) {
   const roomId = unmatchedUser.id + "#" + socket.id;
   socket.join(roomId);
   unmatchedUser.join(roomId);
-  io.to(roomId).emit("matchSuccess");
+  io.to(roomId).emit("matchSuccess", unmatchedUser.id);
   console.log("joined", unmatchedUser.id, socket.id, roomId);
 
   rooms[socket.id] = roomId;
@@ -57,10 +77,30 @@ io.on("connection", (socket) => {
       socket.to(rooms[socket.id]).emit("typing", isTyping);
     }
   });
+
+  socket.on("offer", (data) => {
+    const roomId = rooms[socket.id];
+    console.log("offer data", data);
+
+    socket.to(roomId).emit("newOffer", data);
+  });
+  socket.on("answer", (data) => {
+    const roomId = rooms[socket.id];
+    console.log("answer data", data);
+
+    socket.to(roomId).emit("newAnswer", data);
+  });
+  socket.on("iceCandidate", (data: RTCIceCandidate) => {
+    const roomId = rooms[socket.id];
+    console.log("ice candidate", data);
+
+    socket.to(roomId).emit("newIceCandidate", data);
+  });
+
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
     unmatchedUsers.delete(socket.id);
     delete rooms[socket.id];
   });
 });
-httpServer.listen(port, () => console.log(`listening at port ${port}`));
+server.listen(port, () => console.log(`listening at port ${port} ${inDev}`));
