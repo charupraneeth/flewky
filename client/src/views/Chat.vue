@@ -3,6 +3,7 @@ import Loader from "../components/Loader.vue";
 import TypingPlaceholder from "../components/TypingPlaceholder.vue";
 
 import {
+  onErrorCaptured,
   onMounted,
   onUnmounted,
   ref,
@@ -20,8 +21,6 @@ const isStrangerTyping = ref(false);
 const message = ref<string>("");
 const messagesContainer = ref<HTMLDivElement>(null!);
 const messages = ref<Message[]>([]);
-
-const iceCandidates: RTCIceCandidate[] = [];
 
 let localStream: MediaStream;
 let remoteStream: MediaStream = new MediaStream();
@@ -46,6 +45,40 @@ async function handleSend() {
   messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   message.value = "";
 }
+async function handleIceCandidate(event: RTCPeerConnectionIceEvent) {
+  console.log("gen candidate ", event.candidate);
+  if (event.candidate) {
+    gState.IO.emit("iceCandidate", event.candidate);
+  }
+}
+
+async function handleIceStateChange(event: Event) {
+  console.log("ICE state change event: ", event);
+}
+async function handleRemoteTrack(event: RTCTrackEvent) {
+  console.log("pc2 received remote stream");
+  console.log(event);
+
+  remoteStream = event.streams[0];
+  remoteVideoEl.value.srcObject = event.streams[0];
+  await remoteVideoEl.value.play();
+}
+
+async function handleMatchSuccess(initiatorId: string) {
+  pc.addEventListener("icecandidate", handleIceCandidate);
+  pc.addEventListener("iceconnectionstatechange", handleIceStateChange);
+  pc.addEventListener("track", handleRemoteTrack);
+  if (initiatorId === gState.IO.id) {
+    const offer = await pc.createOffer({
+      offerToReceiveAudio: false,
+      offerToReceiveVideo: true,
+    });
+    console.log(offer);
+    await pc.setLocalDescription(offer);
+    console.log("offer set as LD");
+    gState.IO.emit("offer", offer);
+  }
+}
 
 watch(
   () => message.value,
@@ -64,53 +97,29 @@ const configuration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
 
-pc = new RTCPeerConnection(configuration);
-pc.addEventListener("icecandidate", (event) => {
-  console.log("gen candidate ", event.candidate);
-  if (event.candidate) {
-    gState.IO.emit("iceCandidate", event.candidate);
-  }
-});
-
 onMounted(async () => {
   if (!gState.IO.id) {
     router.push("/");
     return;
   }
-  const offer = await pc.createOffer();
-  console.log(offer);
-  await pc.setLocalDescription(offer);
-  console.log("offer set as LD");
 
   localStream = await navigator.mediaDevices.getUserMedia({
     video: true,
     audio: true,
   });
 
+  pc = new RTCPeerConnection(configuration);
+
   localStream.getTracks().forEach((track) => {
     pc.addTrack(track, localStream);
   });
 
-  pc.addEventListener("track", async (event) => {
-    console.log("got some tracks");
-    remoteStream.addTrack(event.track);
-  });
-
-  pc.addEventListener("connectionstatechange", (event) => {
-    console.log("no hey");
-
-    if (pc.connectionState === "connected") {
-      // Peers connected!
-      console.log("hye connected");
-    }
-  });
-
   gState.IO.emit("connectNewUser");
-  gState.IO.on("matchSuccess", async (initiatorId: string) => {
+  gState.IO.on("matchSuccess", (id: string) => {
     isMatched.value = true;
-    if (initiatorId === gState.IO.id) {
-      gState.IO.emit("offer", offer);
-    }
+    console.log("matchned asdfjasdf");
+
+    handleMatchSuccess(id);
   });
   gState.IO.on("newMessage", async (newMessage: string) => {
     console.log("msg recieved", newMessage);
@@ -134,16 +143,21 @@ onMounted(async () => {
   });
 
   gState.IO.on("newOffer", async (newOffer: RTCSessionDescriptionInit) => {
-    console.log("got new offer");
-    pc.setRemoteDescription(new RTCSessionDescription(newOffer));
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    console.log("description set from offer");
-    gState.IO.emit("answer", answer);
-    console.log("emitted answer");
+    try {
+      console.log("got new offer");
+      await pc.setRemoteDescription(new RTCSessionDescription(newOffer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      console.log("description set from offer");
+      gState.IO.emit("answer", answer);
+      console.log("emitted answer");
+    } catch (error) {
+      console.log("newOfferError", error);
+    }
   });
   gState.IO.on("newIceCandidate", async (newIceCandidate) => {
     try {
+      console.log("got candidate from remote");
       await pc.addIceCandidate(newIceCandidate);
     } catch (e) {
       console.error("Error adding received ice candidate", e);
@@ -234,9 +248,9 @@ onUnmounted(() => {
 
 .section-video {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  // flex-direction: column;
+  // justify-content: space-around;
+  // align-items: center;
   .video-container {
     video {
       width: 100%;
