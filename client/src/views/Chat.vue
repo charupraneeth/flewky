@@ -3,7 +3,6 @@ import Loader from "../components/Loader.vue";
 import TypingPlaceholder from "../components/TypingPlaceholder.vue";
 
 import {
-  onErrorCaptured,
   onMounted,
   onUnmounted,
   ref,
@@ -70,7 +69,7 @@ async function handleMatchSuccess(initiatorId: string) {
   pc.addEventListener("track", handleRemoteTrack);
   if (initiatorId === gState.IO.id) {
     const offer = await pc.createOffer({
-      offerToReceiveAudio: false,
+      offerToReceiveAudio: true,
       offerToReceiveVideo: true,
     });
     console.log(offer);
@@ -167,13 +166,13 @@ onMounted(async () => {
   watchEffect(async () => {
     if (localVideoEl.value) {
       localVideoEl.value.srcObject = localStream;
-      localVideoEl.value.muted = true;
+
       await localVideoEl.value.play();
       console.log("local played");
     }
     if (remoteVideoEl.value) {
       remoteVideoEl.value.srcObject = remoteStream;
-      remoteVideoEl.value.muted = true;
+
       // await remoteVideoEl.value.play();
       console.log("remote played");
     }
