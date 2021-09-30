@@ -166,8 +166,8 @@ onMounted(async () => {
   watchEffect(async () => {
     if (localVideoEl.value) {
       localVideoEl.value.srcObject = localStream;
-
-      await localVideoEl.value.play();
+      localVideoEl.value.volume = 0;
+      // await localVideoEl.value.play();
       console.log("local played");
     }
     if (remoteVideoEl.value) {
@@ -222,10 +222,16 @@ onUnmounted(() => {
 
     <div class="section-video">
       <div class="video-container">
-        <video ref="localVideoEl" class="local-video"></video>
+        <video
+          ref="localVideoEl"
+          muted
+          autoplay
+          playsinline
+          class="local-video"
+        ></video>
       </div>
       <div class="video-container">
-        <video ref="remoteVideoEl"></video>
+        <video ref="remoteVideoEl" autoplay playsinline></video>
       </div>
     </div>
   </section>
