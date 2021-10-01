@@ -8,6 +8,7 @@
     "serve": "vite preview --host --https"
   },
   "dependencies": {
+    "mosha-vue-toastify": "^1.0.23",
     "socket.io-client": "^4.2.0",
     "vue": "^3.2.6",
     "vue-router": "^4.0.11"

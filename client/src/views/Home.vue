@@ -30,20 +30,20 @@ function handleConnect() {
           <h1>From strangers to friends the journey just got easy</h1>
         </div>
         <div class="call-to-action">
-          <h3 class="call-to-action__label">Start chatting :</h3>
+          <h3 class="call-to-action__label">Click below</h3>
           <div class="call-to-action__buttons">
             <button
               class="btn call-to-action__button btn-secondary"
               @click="handleConnect"
             >
-              Video
+              go
             </button>
-            <button
+            <!-- <button
               class="btn call-to-action__button btn-primary"
               @click="handleConnect"
             >
               Text
-            </button>
+            </button> -->
           </div>
         </div>
       </div>
@@ -94,13 +94,14 @@ section {
 }
 .call-to-action__buttons {
   margin-top: 1rem;
-  display: flex;
-  justify-content: center;
+  text-align: left;
+  // display: flex;
+  // justify-content: center;
 }
 .call-to-action__button {
   font-weight: bold;
   font-size: 1rem;
-  margin-right: 1rem;
+  // margin-right: 1rem;
   padding: 0.8rem 4rem;
 }
 
@@ -116,12 +117,15 @@ section {
   }
   .headline {
     margin: 3rem 0;
+    h1 {
+      text-align: center;
+    }
+  }
+  .call-to-action__buttons {
+    text-align: center;
   }
   .call-to-action__label {
     text-align: center;
-  }
-  .call-to-action__button {
-    padding: 0.8rem 2rem;
   }
 }
 </style>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import Loader from "../components/Loader.vue";
 import TypingPlaceholder from "../components/TypingPlaceholder.vue";
+import { createToast } from "mosha-vue-toastify";
+// import the styling for the toast
+import "mosha-vue-toastify/dist/style.css";
 
 import {
   onMounted,
@@ -54,28 +57,45 @@ async function handleIceCandidate(event: RTCPeerConnectionIceEvent) {
 async function handleIceStateChange(event: Event) {
   console.log("ICE state change event: ", event);
 }
+
+function handleConnectionStateChange() {
+  const failedStates = ["disconnected", "failed", "closed"];
+  console.log("states ", pc.connectionState);
+
+  if (pc.connectionState === "connected") {
+    createToast(pc.connectionState, { type: "success" });
+  } else if (failedStates.includes(pc.connectionState)) {
+    createToast(pc.connectionState, { type: "danger" });
+  }
+}
 async function handleRemoteTrack(event: RTCTrackEvent) {
   console.log("pc2 received remote stream");
   console.log(event);
-
   remoteStream = event.streams[0];
-  remoteVideoEl.value.srcObject = event.streams[0];
+  remoteVideoEl.value.srcObject = remoteStream;
   await remoteVideoEl.value.play();
 }
 
 async function handleMatchSuccess(initiatorId: string) {
-  pc.addEventListener("icecandidate", handleIceCandidate);
-  pc.addEventListener("iceconnectionstatechange", handleIceStateChange);
-  pc.addEventListener("track", handleRemoteTrack);
-  if (initiatorId === gState.IO.id) {
-    const offer = await pc.createOffer({
-      offerToReceiveAudio: true,
-      offerToReceiveVideo: true,
-    });
-    console.log(offer);
-    await pc.setLocalDescription(offer);
-    console.log("offer set as LD");
-    gState.IO.emit("offer", offer);
+  try {
+    isMatched.value = true;
+    pc.addEventListener("icecandidate", handleIceCandidate);
+    pc.addEventListener("iceconnectionstatechange", handleIceStateChange);
+    pc.addEventListener("connectionstatechange", handleConnectionStateChange);
+    pc.addEventListener("track", handleRemoteTrack);
+    if (initiatorId === gState.IO.id) {
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
+      console.log(offer);
+      await pc.setLocalDescription(offer);
+      console.log("offer set as LD");
+      gState.IO.emit("offer", offer);
+    }
+    createToast("trying to send the offer", { type: "info" });
+  } catch (error) {
+    createToast("failed to send the offer", { type: "danger" });
   }
 }
 
@@ -96,28 +116,36 @@ const configuration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
 
-onMounted(async () => {
+async function init() {
+  isMatched.value = false;
   if (!gState.IO.id) {
     router.push("/");
     return;
   }
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    pc = new RTCPeerConnection(configuration);
 
-  localStream = await navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: true,
-  });
-
-  pc = new RTCPeerConnection(configuration);
-
-  localStream.getTracks().forEach((track) => {
-    pc.addTrack(track, localStream);
-  });
+    localStream.getTracks().forEach((track) => {
+      track.addEventListener("ended", () => {
+        console.log("local track ended");
+        createToast("local video ended/disabled", { type: "danger" });
+        router.push("/");
+      });
+      pc.addTrack(track, localStream);
+    });
+  } catch (error) {
+    createToast("video is required", { type: "danger" });
+    console.log(error);
+    router.push("/");
+    return;
+  }
 
   gState.IO.emit("connectNewUser");
   gState.IO.on("matchSuccess", (id: string) => {
-    isMatched.value = true;
-    console.log("matchned asdfjasdf");
-
     handleMatchSuccess(id);
   });
   gState.IO.on("newMessage", async (newMessage: string) => {
@@ -135,10 +163,15 @@ onMounted(async () => {
     }, 800);
   });
   gState.IO.on("newAnswer", async (newOffer: RTCSessionDescriptionInit) => {
-    console.log("got new answer");
-    const remoteDescription = new RTCSessionDescription(newOffer);
-    await pc.setRemoteDescription(remoteDescription);
-    console.log("description set from answer");
+    try {
+      console.log("got new answer");
+      const remoteDescription = new RTCSessionDescription(newOffer);
+      await pc.setRemoteDescription(remoteDescription);
+      console.log("description set from answer");
+      createToast("recieved answer, trying to connect", { type: "info" });
+    } catch (error) {
+      createToast("failed to set answer", { type: "danger" });
+    }
   });
 
   gState.IO.on("newOffer", async (newOffer: RTCSessionDescriptionInit) => {
@@ -150,7 +183,9 @@ onMounted(async () => {
       console.log("description set from offer");
       gState.IO.emit("answer", answer);
       console.log("emitted answer");
+      // createToast("got an offer, sending reply", { type: "info" });
     } catch (error) {
+      createToast("failed to accept offer", { type: "danger" });
       console.log("newOfferError", error);
     }
   });
@@ -163,6 +198,12 @@ onMounted(async () => {
     }
   });
 
+  gState.IO.on("strangerDisconnected", () => {
+    createToast("stanger disconnected", { type: "danger" });
+    // reconnect
+    init();
+  });
+
   watchEffect(async () => {
     if (localVideoEl.value) {
       localVideoEl.value.srcObject = localStream;
@@ -172,11 +213,15 @@ onMounted(async () => {
     }
     if (remoteVideoEl.value) {
       remoteVideoEl.value.srcObject = remoteStream;
-
       // await remoteVideoEl.value.play();
       console.log("remote played");
     }
   });
+}
+
+onMounted(async () => {
+  console.log("not matched");
+  init();
 });
 
 onUnmounted(() => {

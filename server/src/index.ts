@@ -99,6 +99,8 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
+    const roomId = rooms[socket.id];
+    socket.to(roomId).emit("strangerDisconnected");
     unmatchedUsers.delete(socket.id);
     delete rooms[socket.id];
   });
