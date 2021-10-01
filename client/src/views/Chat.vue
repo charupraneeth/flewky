@@ -221,16 +221,10 @@ onUnmounted(() => {
     </div>
 
     <div class="section-video">
-      <div class="video-container">
-        <video
-          ref="localVideoEl"
-          muted
-          autoplay
-          playsinline
-          class="local-video"
-        ></video>
+      <div class="video-container local-video">
+        <video ref="localVideoEl" muted autoplay playsinline></video>
       </div>
-      <div class="video-container">
+      <div class="video-container remote-video">
         <video ref="remoteVideoEl" autoplay playsinline></video>
       </div>
     </div>
@@ -253,20 +247,32 @@ onUnmounted(() => {
 
 .section-video {
   display: flex;
-  // flex-direction: column;
-  // justify-content: space-around;
+  flex-direction: column;
+  justify-content: flex-start;
   // align-items: center;
   .video-container {
+    max-height: 300px;
+    max-width: 90%;
+    margin: 0 auto;
+
     video {
       width: 100%;
-      padding: 1rem;
-      height: 80%;
+      padding: 10px 0;
+      height: 100%;
     }
   }
 }
+@media screen and (max-width: 450px) {
+  .local-video {
+    max-height: 300px !important;
+    max-width: 200px !important;
+  }
+}
+
 .section-messages {
   background: $secondary;
   width: 350px;
+  min-height: 200px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
