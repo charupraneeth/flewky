@@ -118,16 +118,24 @@ const configuration = {
 
 async function init() {
   isMatched.value = false;
+  remoteStream = new MediaStream();
+  messages.value = [];
   if (!gState.IO.id) {
     router.push("/");
     return;
   }
+  pc = new RTCPeerConnection(configuration);
+
+  gState.IO.off();
+  pc.removeEventListener("icecandidate", handleIceCandidate);
+  pc.removeEventListener("iceconnectionstatechange", handleIceStateChange);
+  pc.removeEventListener("connectionstatechange", handleConnectionStateChange);
+  pc.removeEventListener("track", handleRemoteTrack);
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true,
     });
-    pc = new RTCPeerConnection(configuration);
 
     localStream.getTracks().forEach((track) => {
       track.addEventListener("ended", () => {
@@ -143,8 +151,8 @@ async function init() {
     router.push("/");
     return;
   }
-
   gState.IO.emit("connectNewUser");
+
   gState.IO.on("matchSuccess", (id: string) => {
     handleMatchSuccess(id);
   });
@@ -170,7 +178,9 @@ async function init() {
       console.log("description set from answer");
       createToast("recieved answer, trying to connect", { type: "info" });
     } catch (error) {
+      console.log("err", error);
       createToast("failed to set answer", { type: "danger" });
+      init();
     }
   });
 
@@ -187,6 +197,7 @@ async function init() {
     } catch (error) {
       createToast("failed to accept offer", { type: "danger" });
       console.log("newOfferError", error);
+      init();
     }
   });
   gState.IO.on("newIceCandidate", async (newIceCandidate) => {
@@ -220,7 +231,13 @@ async function init() {
 }
 
 onMounted(async () => {
+  if (!gState.IO.id) {
+    router.push("/");
+    return;
+  }
+
   console.log("not matched");
+
   init();
 });
 
