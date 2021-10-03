@@ -66,6 +66,7 @@ function handleConnectionStateChange() {
     createToast(pc.connectionState, { type: "success" });
   } else if (failedStates.includes(pc.connectionState)) {
     createToast(pc.connectionState, { type: "danger" });
+    init();
   }
 }
 async function handleRemoteTrack(event: RTCTrackEvent) {
