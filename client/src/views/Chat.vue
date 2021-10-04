@@ -322,6 +322,7 @@ onUnmounted(() => {
       width: 100%;
       padding: 10px 0;
       height: 100%;
+      transform: rotateY(180deg);
     }
   }
 }
