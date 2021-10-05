@@ -64,6 +64,10 @@ io.on("connection", (socket) => {
   console.log(`socketd connected `, socket.id);
   console.log("all sockets", io.sockets.allSockets());
 
+  socket.on("ping", async () => {
+    const sockets = await io.sockets.allSockets();
+    io.to(socket.id).emit("pong", `clients connected : ${sockets.size}`);
+  });
   socket.on("connectNewUser", () => {
     if (rooms[socket.id]) {
       socket.leave(rooms[socket.id]);
