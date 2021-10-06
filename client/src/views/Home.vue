@@ -1,60 +1,115 @@
 <script setup lang="ts">
+import { onMounted, ref } from "@vue/runtime-core";
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "vue-router";
 import gState from "../store/index";
+import { createToast } from "mosha-vue-toastify";
+import "mosha-vue-toastify/dist/style.css";
+import Loader from "../components/Loader.vue";
+import { Jiglag } from "../@types";
 
 const router = useRouter();
+const loading = ref(true);
+const token = ref("");
+
 function handleConnect() {
   try {
     const ioObject: Socket = io(import.meta.env.VITE_SERVER_URL, {
       transports: ["websocket"],
+      auth: {
+        token: token.value,
+      },
     });
     gState.IO = ioObject;
 
     gState.IO.on("connect", () => {
+      console.log("connected");
+
+      loading.value = false;
       router.push("/app");
     });
-  } catch (error) {
+    gState.IO.on("connect_error", (err) => {
+      console.log(err);
+      throw new Error(err.message || "failed to login");
+    });
+  } catch (error: any) {
     console.log(error);
+    createToast(error.message || "failed to connect socket", {
+      type: "warning",
+    });
+    localStorage.clear();
+    router.push("/login");
   }
 }
+
+onMounted(() => {
+  loading.value = true;
+  const jiglag = localStorage.getItem("jiglag");
+  if (!jiglag) {
+    router.push("/login");
+    return;
+  }
+  const { email, token: prevToken } = JSON.parse(jiglag) as Jiglag;
+
+  if (!token || !email || !prevToken.trim() || !email.trim()) {
+    loading.value = false;
+    router.push("/login");
+    return;
+  } else {
+    token.value = prevToken;
+    handleConnect();
+  }
+});
 </script>
 <template>
-  <div class="home-container">
-    <nav>
-      <router-link class="logo" to="/">WIII logo</router-link>
-    </nav>
-    <section>
-      <div class="section-intro">
-        <div class="headline">
-          <h1>From strangers to friends the journey just got easy</h1>
-        </div>
-        <div class="call-to-action">
-          <h3 class="call-to-action__label">Click below</h3>
-          <div class="call-to-action__buttons">
-            <button
-              class="btn call-to-action__button btn-secondary"
-              @click="handleConnect"
-            >
-              go
-            </button>
-            <!-- <button
+  <section class="loader-section" v-if="loading">
+    <Loader />
+  </section>
+  <div class="home-container" v-else>
+    <main>
+      <nav>
+        <router-link class="logo" to="/">WIII logo</router-link>
+      </nav>
+      <section>
+        <div class="section-intro">
+          <div class="headline">
+            <h1>From strangers to friends the journey just got easy</h1>
+          </div>
+          <div class="call-to-action">
+            <h3 class="call-to-action__label">Click below</h3>
+            <div class="call-to-action__buttons">
+              <button
+                class="btn call-to-action__button btn-secondary"
+                @click="handleConnect"
+              >
+                go
+              </button>
+              <!-- <button
               class="btn call-to-action__button btn-primary"
               @click="handleConnect"
             >
               Text
             </button> -->
+            </div>
           </div>
         </div>
-      </div>
-      <div class="section-illustration">
-        <img src="../assets/landing_illustration.svg" alt="" />
-      </div>
-    </section>
+        <div class="section-illustration">
+          <img src="../assets/landing_illustration.svg" alt="" />
+        </div>
+      </section>
+    </main>
   </div>
 </template>
 
 <style scoped lang="scss">
+.loader-section {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .home-container {
   height: 100%;
 }

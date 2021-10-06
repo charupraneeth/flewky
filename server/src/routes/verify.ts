@@ -1,6 +1,7 @@
 import express from "express";
 import ismail from "ismail";
 import { get } from "../redisClient";
+import genToken from "../utils/genToken";
 
 const router = express.Router();
 
@@ -25,9 +26,12 @@ router.post("/", async (req, res, next) => {
       throw new Error("invalid code");
     }
     // return jwt token
+    const token = await genToken(email);
+    console.log(token);
     res.json({
       message: "success",
-      errors: [],
+      data: token,
+      error: "",
     });
   } catch (error: Error | any) {
     if (error.response) {

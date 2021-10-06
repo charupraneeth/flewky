@@ -8,6 +8,7 @@
     "serve": "vite preview --host --https"
   },
   "dependencies": {
+    "ismail": "^1.2.0",
     "mosha-vue-toastify": "^1.0.23",
     "socket.io-client": "^4.2.0",
     "vue": "^3.2.6",

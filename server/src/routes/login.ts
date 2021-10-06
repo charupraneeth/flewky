@@ -2,7 +2,6 @@ import express from "express";
 import ismail from "ismail";
 import { config } from "dotenv";
 import path from "path";
-// import redis from "../redis";
 config({ path: path.join(__dirname, "../../.env") });
 
 import sgMail from "@sendgrid/mail";
@@ -32,7 +31,7 @@ router.post("/", async (req, res, next) => {
     await setEx(email, expiry, code);
     res.json({
       message: "success",
-      errors: [],
+      error: "",
     });
   } catch (error: Error | any) {
     console.error(error);

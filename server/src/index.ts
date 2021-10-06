@@ -7,6 +7,8 @@ import helmet from "helmet";
 import { readFileSync } from "fs";
 import { config } from "dotenv";
 import path from "path";
+import cors from "cors";
+import jwt from "jsonwebtoken";
 
 import { errorHandler, notFound } from "./middlewares";
 import api from "./api";
@@ -64,6 +66,18 @@ function matchUser(socket: Socket) {
   rooms[unmatchedUser.id] = roomId;
   unmatchedUsers.delete(unmatchedUser.id);
 }
+
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  jwt.verify(token, process.env.JWT_SECRET as any, (err: any, decode: any) => {
+    if (err) {
+      next(err || "invalid tokenZ");
+    }
+    console.log("decoded ", decode);
+    socket.data.decode = decode;
+    next();
+  });
+});
 
 io.on("connection", (socket) => {
   console.log(`socketd connected `, socket.id);
@@ -123,6 +137,7 @@ io.on("connection", (socket) => {
 
 app.use(helmet());
 app.use(express.json());
+app.use(cors());
 
 app.use("/api/v1", api);
 app.use(notFound);
