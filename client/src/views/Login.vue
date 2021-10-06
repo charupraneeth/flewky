@@ -242,4 +242,16 @@ button {
 .vcode-wrap {
   margin-top: 1rem;
 }
+
+@media screen and (max-width: 640px) {
+  .login-container {
+    padding: 0 1rem;
+  }
+  section {
+    flex-direction: column-reverse;
+  }
+  .section-illustration {
+    margin-top: 0;
+  }
+}
 </style>
