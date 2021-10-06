@@ -3,9 +3,15 @@ import express from "express";
 import https from "https";
 import http from "http";
 import { Server, Socket } from "socket.io";
+import helmet from "helmet";
 import { readFileSync } from "fs";
 import { config } from "dotenv";
 import path from "path";
+
+import { errorHandler, notFound } from "./middlewares";
+import api from "./api";
+import { inProd } from "./constants";
+
 config({ path: path.join(__dirname, "../.env") });
 
 const port = process.env.PORT || 1337;
@@ -13,9 +19,10 @@ const port = process.env.PORT || 1337;
 const app = express();
 
 let server;
-const inDev = process.env.NODE_ENV === "development";
 
-if (inDev) {
+if (inProd) {
+  server = http.createServer(app);
+} else {
   server = https.createServer(
     {
       key: readFileSync("certificates/key.pem"),
@@ -23,8 +30,6 @@ if (inDev) {
     },
     app
   );
-} else {
-  server = http.createServer(app);
 }
 const io = new Server(server, {
   cors: {
@@ -115,4 +120,11 @@ io.on("connection", (socket) => {
     unmatchedUsers.delete(socket.id);
   });
 });
-server.listen(port, () => console.log(`listening at port ${port} ${inDev}`));
+
+app.use(helmet());
+app.use(express.json());
+
+app.use("/api/v1", api);
+app.use(notFound);
+app.use(errorHandler);
+server.listen(port, () => console.log(`listening at port ${port} ${inProd}`));
