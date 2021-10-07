@@ -15,7 +15,7 @@ const verificationCode = ref("");
 async function verifyCode() {
   try {
     if (!verificationCode.value || !verificationCode.value.trim()) {
-      createToast("invalid email", { type: "warning" });
+      createToast("invalid code", { type: "warning" });
       return;
     }
     loading.value = true;
@@ -48,7 +48,7 @@ async function verifyCode() {
     if (!json.data) {
       throw new Error("invalid token recieved");
     }
-    createToast("sucessfully sent email", { type: "info" });
+    createToast("sucessfully verified code", { type: "info" });
     const data: Jiglag = { email: emailInput.value, token: json.data };
     localStorage.setItem("jiglag", JSON.stringify(data));
     loading.value = false;

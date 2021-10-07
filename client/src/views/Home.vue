@@ -14,6 +14,9 @@ const token = ref("");
 
 function handleConnect() {
   try {
+    if (!token.value) {
+      router.push("/login");
+    }
     const ioObject: Socket = io(import.meta.env.VITE_SERVER_URL, {
       transports: ["websocket"],
       auth: {
@@ -29,16 +32,20 @@ function handleConnect() {
       router.push("/app");
     });
     gState.IO.on("connect_error", (err) => {
-      console.log(err);
-      throw new Error(err.message || "failed to login");
+      if (err.message.includes("jwt")) {
+        createToast("prev token expired, login again", { type: "warning" });
+        localStorage.clear();
+        console.log("pushing");
+        gState.IO = {} as any;
+        router.push("/login");
+        return;
+      }
     });
   } catch (error: any) {
     console.log(error);
     createToast(error.message || "failed to connect socket", {
       type: "warning",
     });
-    localStorage.clear();
-    router.push("/login");
   }
 }
 
@@ -57,7 +64,8 @@ onMounted(() => {
     return;
   } else {
     token.value = prevToken;
-    handleConnect();
+    loading.value = false;
+    // handleConnect();
   }
 });
 </script>

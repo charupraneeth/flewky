@@ -67,14 +67,14 @@ function matchUser(socket: Socket) {
   unmatchedUsers.delete(unmatchedUser.id);
 }
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
   const token = socket.handshake.auth.token;
-  jwt.verify(token, process.env.JWT_SECRET as any, (err: any, decode: any) => {
+  jwt.verify(token, process.env.JWT_SECRET as any, (err: any, decoded: any) => {
     if (err) {
-      next(err || "invalid tokenZ");
+      console.log(err);
+      next(err);
     }
-    console.log("decoded ", decode);
-    socket.data.decode = decode;
+    console.log("decoded ", decoded);
     next();
   });
 });
