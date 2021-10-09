@@ -47,8 +47,12 @@ async function handleSend() {
   messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   message.value = "";
 }
+async function handleEndCall() {
+  await init();
+}
+
 async function handleIceCandidate(event: RTCPeerConnectionIceEvent) {
-  console.log("gen candidate ", event.candidate);
+  // console.log("gen candidate ", event.candidate);
   if (event.candidate) {
     gState.IO.emit("iceCandidate", event.candidate);
   }
@@ -118,6 +122,10 @@ const configuration = {
 };
 
 async function init() {
+  if (pc) {
+    pc.close();
+  }
+  console.log("is matched ", isMatched.value);
   isMatched.value = false;
   remoteStream = new MediaStream();
   messages.value = [];
@@ -228,6 +236,7 @@ async function init() {
       // await remoteVideoEl.value.play();
       console.log("remote played");
     }
+    console.log("estate ", pc.signalingState);
   });
 }
 
@@ -270,6 +279,9 @@ onUnmounted(() => {
       </div>
 
       <div class="message-input">
+        <span class="phone-icon" @click="handleEndCall">
+          <i class="fa fa-phone" aria-hidden="true"></i>
+        </span>
         <input
           type="text"
           v-model="message"
@@ -352,14 +364,29 @@ onUnmounted(() => {
     text-align: center;
     display: flex;
     padding: 0.5rem;
+    .phone-icon {
+      cursor: pointer;
+      border-radius: 50%;
+      padding: 1rem;
+      margin-right: 0.5rem;
+
+      color: white;
+
+      background: $tertiary;
+      i {
+        transform: rotate(225deg);
+      }
+      &:active i {
+        transform: rotate(225deg) scale(0.8);
+      }
+    }
 
     .send-arrow {
       margin-left: 0.5rem;
       cursor: pointer;
-      font-size: 1.75rem;
       color: white;
       background: $tertiary;
-      padding: 0.5rem;
+      padding: 1rem;
 
       border-radius: 50%;
 

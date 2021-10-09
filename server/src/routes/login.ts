@@ -27,7 +27,7 @@ router.post("/", async (req, res, next) => {
     const code = generateCode();
     const msg = mailMessage(code, email);
 
-    await sgMail.send(msg);
+    // await sgMail.send(msg);
     await setEx(email, expiry, code);
     res.json({
       message: "success",
