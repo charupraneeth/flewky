@@ -48,6 +48,7 @@ async function handleSend() {
   message.value = "";
 }
 async function handleEndCall() {
+  gState.IO.emit("endCall");
   await init();
 }
 

@@ -120,6 +120,20 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("newIceCandidate", data);
   });
 
+  socket.on("endCall", async () => {
+    console.log("ended call", socket.id);
+    const roomId = rooms[socket.id];
+    socket.to(roomId).emit("strangerDisconnected");
+    const clients = await io.in(roomId).fetchSockets();
+    clients.forEach((client) => {
+      client.leave(roomId);
+      console.log("removing ", client.id);
+
+      delete rooms[client.id];
+    });
+    unmatchedUsers.delete(socket.id);
+  });
+
   socket.on("disconnect", async () => {
     console.log("disconnected", socket.id);
     const roomId = rooms[socket.id];

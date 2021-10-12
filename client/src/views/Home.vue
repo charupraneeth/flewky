@@ -38,6 +38,7 @@ function handleConnect() {
         console.log("pushing");
         gState.IO = {} as any;
         router.push("/login");
+        gState.IO.disconnect && gState.IO.disconnect();
         return;
       }
     });
@@ -46,6 +47,7 @@ function handleConnect() {
     createToast(error.message || "failed to connect socket", {
       type: "warning",
     });
+    gState.IO.disconnect && gState.IO.disconnect();
   }
 }
 
