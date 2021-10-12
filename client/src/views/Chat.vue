@@ -79,7 +79,7 @@ async function handleRemoteTrack(event: RTCTrackEvent) {
   console.log(event);
   remoteStream = event.streams[0];
   remoteVideoEl.value.srcObject = remoteStream;
-  await remoteVideoEl.value.play();
+  // await remoteVideoEl.value.play();
 }
 
 async function handleMatchSuccess(initiatorId: string) {
