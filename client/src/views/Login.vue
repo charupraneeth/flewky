@@ -118,7 +118,7 @@ onMounted(() => {
   <div class="login-container" v-else>
     <main>
       <nav>
-        <router-link class="logo" to="/">WIII logo</router-link>
+        <router-link class="logo" to="/">Flewky</router-link>
       </nav>
       <section>
         <div class="left-section">
