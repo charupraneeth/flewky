@@ -9,7 +9,7 @@ async function genToken(email: string) {
       data: email,
     },
     process.env.JWT_SECRET as any,
-    { expiresIn: "3h" }
+    { expiresIn: "1d" }
   );
   return token;
 }
