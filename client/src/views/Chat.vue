@@ -37,7 +37,16 @@ let isTypingTimeout: ReturnType<typeof setTimeout>;
 
 async function handleSend() {
   if (!message.value || !message.value.trim()) return;
-  console.log("sending ", message.value);
+  console.log(message.value.length);
+
+  if (message.value.length > 128) {
+    createToast("message can have a max 128 of characters only", {
+      type: "warning",
+    });
+    message.value = "";
+    return;
+  }
+  // console.log("sending ", message.value);
 
   gState.IO.emit("message", message.value);
   gState.IO.emit("typing", false);
@@ -420,6 +429,7 @@ onUnmounted(() => {
 .message {
   display: flex;
   justify-content: flex-start;
+  overflow-wrap: anywhere;
   font-size: 0.9rem;
   margin: 1.4rem 2rem 1.4rem 0rem;
 
