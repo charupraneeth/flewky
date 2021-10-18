@@ -6,11 +6,33 @@ import ismail from "ismail";
 import { Jiglag } from "../@types";
 import router from "../router";
 import { onMounted } from "@vue/runtime-core";
+import { useRecaptcha, VueRecaptcha } from "vue3-recaptcha-v2";
 
 const emailInput = ref("");
 const loading = ref(false);
 const isMailSent = ref(false);
 const verificationCode = ref("");
+const captchaToken = ref("");
+
+const { resetRecaptcha } = useRecaptcha();
+const recaptchaWidget = ref(null);
+
+const callbackVerify = (response: any) => {
+  console.log("token ", response);
+  captchaToken.value = response;
+};
+const callbackExpired = () => {
+  console.log("expired!");
+  captchaToken.value = "";
+};
+const callbackFail = () => {
+  console.log("fail");
+  captchaToken.value = "";
+};
+// Reset Recaptcha action
+const actionReset = () => {
+  resetRecaptcha(recaptchaWidget.value as any);
+};
 
 async function verifyCode() {
   try {
@@ -32,6 +54,8 @@ async function verifyCode() {
         }),
       }
     );
+
+    actionReset(); // reset captcha
 
     if (!response.ok) {
       throw new Error("bad response");
@@ -79,9 +103,13 @@ async function verifyEmail() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: emailInput.value }),
+        body: JSON.stringify({
+          email: emailInput.value,
+          captchaToken: captchaToken.value,
+        }),
       }
     );
+    actionReset();
     if (!response.ok) {
       throw new Error("bad response");
     }
@@ -136,7 +164,21 @@ onMounted(() => {
               />
             </div>
             <div>
-              <button class="btn-secondary" type="submit" @click="verifyEmail">
+              <vue-recaptcha
+                theme="light"
+                size="normal"
+                :tabindex="0"
+                @widgetId="recaptchaWidget = $event"
+                @verify="callbackVerify($event)"
+                @expired="callbackExpired()"
+                @fail="callbackFail()"
+              />
+              <button
+                class="btn-secondary"
+                type="submit"
+                @click="verifyEmail"
+                v-if="captchaToken"
+              >
                 verify email
               </button>
             </div>

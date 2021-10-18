@@ -9,4 +9,5 @@ declare module "*.vue" {
 
 interface ImportMetaEnv {
   VITE_SERVER_URL: string;
+  VITE_RECAPTCHA_SITE_KEY: string;
 }

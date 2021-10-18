@@ -1,4 +1,10 @@
 import { Request, Response, NextFunction } from "express";
+import { config } from "dotenv";
+import axios from "axios";
+import path from "path";
+
+config({ path: path.join(__dirname, "../.env") });
+
 function notFound(req: Request, res: Response, next: NextFunction) {
   res.status(404);
   const error = new Error("🔍 - Not Found - " + req.originalUrl);
@@ -22,4 +28,44 @@ function errorHandler(
   });
 }
 
-export { notFound, errorHandler };
+export interface CaptchaResponse {
+  success: boolean;
+  challenge_ts: string;
+  hostname: string;
+  "error-codes": string[];
+}
+
+async function verifyRecaptcha(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  console.log(req.body);
+
+  const { captchaToken } = req.body;
+  const details = {
+    secret: process.env.RECAPTCHA_SECRET_KEY,
+    response: captchaToken,
+  };
+
+  const { data } = await axios({
+    method: "POST",
+    url: "https://www.google.com/recaptcha/api/siteverify",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      accept: "application/json",
+    },
+    data: new URLSearchParams(details as any),
+  });
+  console.log(data);
+
+  if (!data.success) {
+    console.log(data["error-codes"]);
+    const error = new Error("invalid captcha!!");
+    next(error);
+    return;
+  }
+  next();
+}
+
+export { notFound, errorHandler, verifyRecaptcha };

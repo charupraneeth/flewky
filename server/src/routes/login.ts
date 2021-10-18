@@ -9,11 +9,12 @@ import mailMessage from "../utils/mailMessage";
 import generateCode from "../utils/randomCode";
 import { setEx } from "../redisClient";
 import { expiry } from "../constants";
+import { verifyRecaptcha } from "../middlewares";
 sgMail.setApiKey(process.env.SENDGRID_API_KEY as any);
 
 const router = express.Router();
 
-router.post("/", async (req, res, next) => {
+router.post("/", verifyRecaptcha, async (req, res, next) => {
   try {
     const { email }: { email: string } = req.body;
     if (!email || !email.trim()) {

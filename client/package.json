@@ -12,7 +12,8 @@
     "mosha-vue-toastify": "^1.0.23",
     "socket.io-client": "^4.2.0",
     "vue": "^3.2.6",
-    "vue-router": "^4.0.11"
+    "vue-router": "^4.0.11",
+    "vue3-recaptcha-v2": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.9.2",
