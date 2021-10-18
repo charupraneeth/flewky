@@ -7,6 +7,7 @@ import { Jiglag } from "../@types";
 import router from "../router";
 import { onMounted } from "@vue/runtime-core";
 import { useRecaptcha, VueRecaptcha } from "vue3-recaptcha-v2";
+import { isCollegeMail } from "./utils";
 
 const emailInput = ref("");
 const loading = ref(false);
@@ -93,6 +94,10 @@ async function verifyEmail() {
     const { valid } = ismail(emailInput.value);
     if (!valid) {
       createToast("invalid email", { type: "warning" });
+      return;
+    }
+    if (!isCollegeMail(emailInput.value)) {
+      createToast("invalid college email", { type: "warning" });
       return;
     }
     loading.value = true;
@@ -267,6 +272,7 @@ section {
   outline: none;
 }
 button {
+  margin-top: 1rem;
   cursor: pointer;
   border: none;
   border-radius: 5px;

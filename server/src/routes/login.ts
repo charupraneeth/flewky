@@ -7,6 +7,7 @@ config({ path: path.join(__dirname, "../../.env") });
 import sgMail from "@sendgrid/mail";
 import mailMessage from "../utils/mailMessage";
 import generateCode from "../utils/randomCode";
+import { isCollegeMail } from "../utils/validateMail";
 import { setEx } from "../redisClient";
 import { expiry } from "../constants";
 import { verifyRecaptcha } from "../middlewares";
@@ -24,11 +25,13 @@ router.post("/", verifyRecaptcha, async (req, res, next) => {
     if (!valid) {
       throw new Error("invalid email address");
     }
-
+    if (!isCollegeMail(email)) {
+      throw new Error("invalid college mail");
+    }
     const code = generateCode();
     const msg = mailMessage(code, email);
 
-    await sgMail.send(msg);
+    // await sgMail.send(msg);
     await setEx(email, expiry, code);
     res.json({
       message: "success",
