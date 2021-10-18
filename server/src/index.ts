@@ -13,6 +13,12 @@ import jwt from "jsonwebtoken";
 import { errorHandler, notFound } from "./middlewares";
 import api from "./api";
 import { inProd } from "./constants";
+import {
+  isUnmatchedUsers,
+  popUnmatchedUsers,
+  removeUnmatchedUsers,
+  setUnmatchedUsers,
+} from "./redisClient";
 
 config({ path: path.join(__dirname, "../.env") });
 
@@ -43,28 +49,36 @@ interface RoomMap {
   [socketId: string]: string;
 }
 
-const unmatchedUsers: Map<string, Socket> = new Map();
-
 const rooms: RoomMap = {};
 
-function matchUser(socket: Socket) {
-  if (!unmatchedUsers.size) {
-    unmatchedUsers.set(socket.id, socket);
+async function matchUser(socket: Socket) {
+  if (!(await isUnmatchedUsers())) {
+    await setUnmatchedUsers(socket.id);
     return;
   }
 
-  const iterator = unmatchedUsers.values();
-  const unmatchedUser: Socket = iterator.next().value;
-  if (unmatchedUser.id === socket.id) return;
-  const roomId = unmatchedUser.id + "#" + socket.id;
+  const unmatchedUserId: string = await popUnmatchedUsers();
+  if (unmatchedUserId === socket.id) return;
+  const roomId = unmatchedUserId + "#" + socket.id;
+  console.log("unmatched user from redis ", unmatchedUserId);
+
+  const unmatchedSocket = await io.in(unmatchedUserId).fetchSockets();
+  if (!unmatchedSocket || !unmatchedSocket.length) {
+    console.log("removing from here");
+    await removeUnmatchedUsers(unmatchedUserId);
+    return await setUnmatchedUsers(socket.id);
+  }
+
   socket.join(roomId);
-  unmatchedUser.join(roomId);
-  io.to(roomId).emit("matchSuccess", unmatchedUser.id);
-  console.log("joined", unmatchedUser.id, socket.id, roomId);
+
+  console.log("unmatched socket ", unmatchedSocket);
+
+  unmatchedSocket[0].join(roomId);
+  io.to(roomId).emit("matchSuccess", unmatchedUserId);
+  console.log("joined", unmatchedUserId, socket.id, roomId);
 
   rooms[socket.id] = roomId;
-  rooms[unmatchedUser.id] = roomId;
-  unmatchedUsers.delete(unmatchedUser.id);
+  rooms[unmatchedUserId] = roomId;
 }
 
 io.use(async (socket, next) => {
@@ -83,12 +97,12 @@ io.on("connection", (socket) => {
   console.log(`socketd connected `, socket.id);
   console.log("all sockets", io.sockets.allSockets());
 
-  socket.on("connectNewUser", () => {
+  socket.on("connectNewUser", async () => {
     if (rooms[socket.id]) {
       socket.leave(rooms[socket.id]);
       delete rooms[socket.id];
     }
-    matchUser(socket);
+    await matchUser(socket);
   });
 
   socket.on("message", (message) => {
@@ -103,19 +117,19 @@ io.on("connection", (socket) => {
 
   socket.on("offer", (data) => {
     const roomId = rooms[socket.id];
-    console.log("offer data", data);
+    // console.log("offer data", data);
 
     socket.to(roomId).emit("newOffer", data);
   });
   socket.on("answer", (data) => {
     const roomId = rooms[socket.id];
-    console.log("answer data", data);
+    // console.log("answer data", data);
 
     socket.to(roomId).emit("newAnswer", data);
   });
   socket.on("iceCandidate", (data: RTCIceCandidate) => {
     const roomId = rooms[socket.id];
-    console.log("ice candidate", data);
+    // console.log("ice candidate", data);
 
     socket.to(roomId).emit("newIceCandidate", data);
   });
@@ -127,11 +141,11 @@ io.on("connection", (socket) => {
     const clients = await io.in(roomId).fetchSockets();
     clients.forEach((client) => {
       client.leave(roomId);
-      console.log("removing ", client.id);
+      console.log("ending ", client.id);
 
       delete rooms[client.id];
     });
-    unmatchedUsers.delete(socket.id);
+    await removeUnmatchedUsers(socket.id);
   });
 
   socket.on("disconnect", async () => {
@@ -145,7 +159,7 @@ io.on("connection", (socket) => {
 
       delete rooms[client.id];
     });
-    unmatchedUsers.delete(socket.id);
+    await removeUnmatchedUsers(socket.id);
   });
 });
 

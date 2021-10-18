@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { Socket } from "socket.io";
 import { inProd } from "./constants";
 
 let redis: Redis.Redis;
@@ -18,5 +19,27 @@ async function get(key: string) {
 async function setEx(key: string, ttl: number, value: string) {
   await redis.setex(key, ttl, value);
 }
+async function isUnmatchedUsers() {
+  return await redis.llen("unmatchedUsers");
+}
 
-export { get, setEx };
+async function setUnmatchedUsers(socketId: string) {
+  await redis.rpush("unmatchedUsers", socketId);
+}
+async function popUnmatchedUsers() {
+  return await redis.lpop("unmatchedUsers");
+}
+async function removeUnmatchedUsers(socketId: string) {
+  console.log("removing socket ", socketId);
+
+  await redis.lrem("unmatchedUser", 0, socketId);
+}
+
+export {
+  get,
+  setEx,
+  isUnmatchedUsers,
+  setUnmatchedUsers,
+  popUnmatchedUsers,
+  removeUnmatchedUsers,
+};
