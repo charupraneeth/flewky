@@ -5,12 +5,35 @@ import { useRouter } from "vue-router";
 import gState from "../store/index";
 import { createToast } from "mosha-vue-toastify";
 import "mosha-vue-toastify/dist/style.css";
+import { useRecaptcha, VueRecaptcha } from "vue3-recaptcha-v2";
+
 import Loader from "../components/Loader.vue";
 import { Jiglag } from "../@types";
 
 const router = useRouter();
 const loading = ref(true);
 const token = ref("");
+const captchaToken = ref("");
+
+const { resetRecaptcha } = useRecaptcha();
+const recaptchaWidget = ref(null);
+
+const callbackVerify = (response: any) => {
+  console.log("token ", response);
+  captchaToken.value = response;
+};
+const callbackExpired = () => {
+  console.log("expired!");
+  captchaToken.value = "";
+};
+const callbackFail = () => {
+  console.log("fail");
+  captchaToken.value = "";
+};
+// Reset Recaptcha action
+const actionReset = () => {
+  resetRecaptcha(recaptchaWidget.value as any);
+};
 
 function handleConnect() {
   try {
@@ -21,6 +44,7 @@ function handleConnect() {
       transports: ["websocket"],
       auth: {
         token: token.value,
+        captchaToken: captchaToken.value,
       },
     });
     gState.IO = ioObject;
@@ -47,6 +71,7 @@ function handleConnect() {
     createToast(error.message || "failed to connect socket", {
       type: "warning",
     });
+    actionReset();
     gState.IO.disconnect && gState.IO.disconnect();
   }
 }
@@ -87,10 +112,21 @@ onMounted(() => {
           </div>
           <div class="call-to-action">
             <h3 class="call-to-action__label">Click below</h3>
+
             <div class="call-to-action__buttons">
+              <vue-recaptcha
+                theme="light"
+                size="normal"
+                :tabindex="0"
+                @widgetId="recaptchaWidget = $event"
+                @verify="callbackVerify($event)"
+                @expired="callbackExpired()"
+                @fail="callbackFail()"
+              />
               <button
                 class="btn call-to-action__button btn-secondary"
                 @click="handleConnect"
+                v-if="captchaToken"
               >
                 go
               </button>
@@ -164,6 +200,7 @@ section {
   // justify-content: center;
 }
 .call-to-action__button {
+  margin-top: 1rem;
   font-weight: bold;
   font-size: 1rem;
   // margin-right: 1rem;
@@ -188,6 +225,9 @@ section {
   }
   .call-to-action__buttons {
     text-align: center;
+    & > * {
+      text-align: center;
+    }
   }
   .call-to-action__label {
     text-align: center;

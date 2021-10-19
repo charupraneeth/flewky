@@ -10,7 +10,7 @@ import path from "path";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 
-import { errorHandler, notFound } from "./middlewares";
+import { errorHandler, notFound, verifyRecaptchaHook } from "./middlewares";
 import api from "./api";
 import { inProd } from "./constants";
 import {
@@ -91,6 +91,14 @@ io.use(async (socket, next) => {
     console.log("decoded ", decoded);
     next();
   });
+});
+
+io.use(async (socket, next) => {
+  const captchaToken = socket.handshake.auth.captchaToken;
+  if (!captchaToken) {
+    next(new Error("invalid captcha token"));
+  }
+  verifyRecaptchaHook(captchaToken, next);
 });
 
 io.on("connection", (socket) => {

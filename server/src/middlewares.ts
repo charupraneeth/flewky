@@ -35,6 +35,39 @@ export interface CaptchaResponse {
   "error-codes": string[];
 }
 
+async function verifyRecaptchaHook(
+  captchaToken: string,
+  next: NextFunction | any
+) {
+  const details = {
+    secret: process.env.RECAPTCHA_SECRET_KEY,
+    response: captchaToken,
+  };
+  try {
+    const { data } = await axios({
+      method: "POST",
+      url: "https://www.google.com/recaptcha/api/siteverify",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        accept: "application/json",
+      },
+      data: new URLSearchParams(details as any),
+    });
+    console.log("verifying captcha");
+
+    console.log(data);
+    if (!data.success) {
+      console.log(data["error-codes"]);
+      const error = new Error("invalid captcha!!");
+      next(error);
+      return;
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function verifyRecaptcha(
   req: Request,
   res: Response,
@@ -43,29 +76,7 @@ async function verifyRecaptcha(
   console.log(req.body);
 
   const { captchaToken } = req.body;
-  const details = {
-    secret: process.env.RECAPTCHA_SECRET_KEY,
-    response: captchaToken,
-  };
-
-  const { data } = await axios({
-    method: "POST",
-    url: "https://www.google.com/recaptcha/api/siteverify",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      accept: "application/json",
-    },
-    data: new URLSearchParams(details as any),
-  });
-  console.log(data);
-
-  if (!data.success) {
-    console.log(data["error-codes"]);
-    const error = new Error("invalid captcha!!");
-    next(error);
-    return;
-  }
-  next();
+  verifyRecaptchaHook(captchaToken, next);
 }
 
-export { notFound, errorHandler, verifyRecaptcha };
+export { notFound, errorHandler, verifyRecaptcha, verifyRecaptchaHook };

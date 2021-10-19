@@ -58,11 +58,11 @@ async function verifyCode() {
 
     actionReset(); // reset captcha
 
-    if (!response.ok) {
-      throw new Error("bad response");
-    }
     const json = await response.json();
     console.log(json);
+    if (!response.ok) {
+      throw new Error(json.error || "bad response");
+    }
 
     if (json.error) {
       throw new Error(json.error);
@@ -115,11 +115,11 @@ async function verifyEmail() {
       }
     );
     actionReset();
-    if (!response.ok) {
-      throw new Error("bad response");
-    }
     const json = await response.json();
     console.log(json);
+    if (!response.ok) {
+      throw new Error(json.error || "bad response");
+    }
 
     if (json.error) {
       throw new Error(json.error);
