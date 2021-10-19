@@ -14,9 +14,12 @@ import { errorHandler, notFound, verifyRecaptchaHook } from "./middlewares";
 import api from "./api";
 import { inProd } from "./constants";
 import {
+  delRoomId,
+  getRoomId,
   isUnmatchedUsers,
   popUnmatchedUsers,
   removeUnmatchedUsers,
+  setRoomId,
   setUnmatchedUsers,
 } from "./redisClient";
 
@@ -77,8 +80,11 @@ async function matchUser(socket: Socket) {
   io.to(roomId).emit("matchSuccess", unmatchedUserId);
   console.log("joined", unmatchedUserId, socket.id, roomId);
 
-  rooms[socket.id] = roomId;
-  rooms[unmatchedUserId] = roomId;
+  await setRoomId(socket.id, roomId);
+  await setRoomId(unmatchedUserId, roomId);
+
+  // rooms[socket.id] = roomId;
+  // rooms[unmatchedUserId] = roomId;
 }
 
 io.use(async (socket, next) => {
@@ -106,67 +112,72 @@ io.on("connection", (socket) => {
   console.log("all sockets", io.sockets.allSockets());
 
   socket.on("connectNewUser", async () => {
-    if (rooms[socket.id]) {
-      socket.leave(rooms[socket.id]);
-      delete rooms[socket.id];
+    const roomId = await getRoomId(socket.id);
+    if (roomId) {
+      socket.leave(roomId);
+      await delRoomId(socket.id);
     }
     await matchUser(socket);
   });
 
-  socket.on("message", (message) => {
-    socket.to(rooms[socket.id]).emit("newMessage", message);
+  socket.on("message", async (message) => {
+    const roomId = await getRoomId(socket.id);
+    if (!roomId) return;
+    socket.to(roomId).emit("newMessage", message);
   });
 
-  socket.on("typing", (isTyping: boolean) => {
+  socket.on("typing", async (isTyping: boolean) => {
+    const roomId = await getRoomId(socket.id);
+    if (!roomId) return;
     if (isTyping === true || isTyping === false) {
-      socket.to(rooms[socket.id]).emit("typing", isTyping);
+      socket.to(roomId).emit("typing", isTyping);
     }
   });
 
-  socket.on("offer", (data) => {
-    const roomId = rooms[socket.id];
+  socket.on("offer", async (data) => {
+    const roomId = await getRoomId(socket.id);
     // console.log("offer data", data);
-
+    if (!roomId) return;
     socket.to(roomId).emit("newOffer", data);
   });
-  socket.on("answer", (data) => {
-    const roomId = rooms[socket.id];
+  socket.on("answer", async (data) => {
+    const roomId = await getRoomId(socket.id);
+    if (!roomId) return;
     // console.log("answer data", data);
-
     socket.to(roomId).emit("newAnswer", data);
   });
-  socket.on("iceCandidate", (data: RTCIceCandidate) => {
-    const roomId = rooms[socket.id];
+  socket.on("iceCandidate", async (data: RTCIceCandidate) => {
+    const roomId = await getRoomId(socket.id);
+    if (!roomId) return;
     // console.log("ice candidate", data);
-
     socket.to(roomId).emit("newIceCandidate", data);
   });
 
   socket.on("endCall", async () => {
     console.log("ended call", socket.id);
-    const roomId = rooms[socket.id];
+    const roomId = await getRoomId(socket.id);
+    if (!roomId) return;
     socket.to(roomId).emit("strangerDisconnected");
     const clients = await io.in(roomId).fetchSockets();
-    clients.forEach((client) => {
+    clients.forEach(async (client) => {
       client.leave(roomId);
       console.log("ending ", client.id);
-
-      delete rooms[client.id];
     });
+    await delRoomId(socket.id);
     await removeUnmatchedUsers(socket.id);
   });
 
   socket.on("disconnect", async () => {
     console.log("disconnected", socket.id);
-    const roomId = rooms[socket.id];
+    const roomId = await getRoomId(socket.id);
+    if (!roomId) return;
     socket.to(roomId).emit("strangerDisconnected");
     const clients = await io.in(roomId).fetchSockets();
     clients.forEach((client) => {
       client.leave(roomId);
       console.log("removing ", client.id);
-
-      delete rooms[client.id];
     });
+    await delRoomId(socket.id);
     await removeUnmatchedUsers(socket.id);
   });
 });

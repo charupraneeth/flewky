@@ -31,8 +31,23 @@ async function popUnmatchedUsers() {
 }
 async function removeUnmatchedUsers(socketId: string) {
   console.log("removing socket ", socketId);
-
   await redis.lrem("unmatchedUser", 0, socketId);
+}
+
+async function setRoomId(socketId: string, roomId: string) {
+  console.log("adding room");
+  await redis.hset("rooms", socketId, roomId);
+}
+
+async function getRoomId(socketId: string) {
+  console.log("log getting room id");
+  const roomId = await redis.hget("rooms", socketId);
+  return roomId;
+}
+
+async function delRoomId(socketId: string) {
+  console.log("del room id");
+  await redis.hdel("rooms", socketId);
 }
 
 export {
@@ -42,4 +57,7 @@ export {
   setUnmatchedUsers,
   popUnmatchedUsers,
   removeUnmatchedUsers,
+  setRoomId,
+  getRoomId,
+  delRoomId,
 };
