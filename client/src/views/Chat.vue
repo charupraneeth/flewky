@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Loader from "../components/Loader.vue";
+import LoaderVideo from "../components/LoaderVideo.vue";
 import TypingPlaceholder from "../components/TypingPlaceholder.vue";
 import { createToast } from "mosha-vue-toastify";
 // import the styling for the toast
@@ -24,6 +25,8 @@ const message = ref<string>("");
 const messagesContainer = ref<HTMLDivElement>(null!);
 const messages = ref<Message[]>([]);
 
+const remoteVideoLoaded = ref(false);
+
 let localStream: MediaStream;
 let remoteStream: MediaStream = new MediaStream();
 
@@ -34,6 +37,10 @@ const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
 let debounceTimeout: ReturnType<typeof setTimeout>;
 let isTypingTimeout: ReturnType<typeof setTimeout>;
+
+function handleRemoteVideoLoad() {
+  remoteVideoLoaded.value = true;
+}
 
 async function handleSend() {
   if (!message.value || !message.value.trim()) return;
@@ -139,6 +146,7 @@ async function init() {
   isMatched.value = false;
   remoteStream = new MediaStream();
   messages.value = [];
+  remoteVideoLoaded.value = false;
   if (!gState.IO.id) {
     router.push("/");
     return;
@@ -307,10 +315,18 @@ onUnmounted(() => {
 
     <div class="section-video">
       <div class="video-container local-video">
-        <video ref="localVideoEl" muted autoplay playsinline></video>
+        <video ref="localVideoEl" muted autoplay playsinline>
+          waiting for your video
+        </video>
       </div>
       <div class="video-container remote-video">
-        <video ref="remoteVideoEl" autoplay playsinline></video>
+        <LoaderVideo v-if="!remoteVideoLoaded" />
+        <video
+          ref="remoteVideoEl"
+          autoplay
+          playsinline
+          @loadeddata="handleRemoteVideoLoad"
+        ></video>
       </div>
     </div>
   </section>
@@ -336,6 +352,7 @@ onUnmounted(() => {
   justify-content: flex-start;
   // align-items: center;
   .video-container {
+    text-align: center;
     max-height: 300px;
     max-width: 90%;
     margin: 0 auto;

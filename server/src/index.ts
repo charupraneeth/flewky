@@ -14,14 +14,16 @@ import { errorHandler, notFound, verifyRecaptchaHook } from "./middlewares";
 import api from "./api";
 import { inProd } from "./constants";
 import {
-  delRoomId,
-  getRoomId,
+  // delRoomId,
+  // getRoomId,
+  // setRoomId,
   isUnmatchedUsers,
   popUnmatchedUsers,
   removeUnmatchedUsers,
-  setRoomId,
   setUnmatchedUsers,
 } from "./redisClient";
+import { getCollege, isCollegeMail } from "./utils/validateMail";
+import { SocketData } from "./@types";
 
 config({ path: path.join(__dirname, "../.env") });
 
@@ -48,12 +50,6 @@ const io = new Server(server, {
   },
 });
 
-interface RoomMap {
-  [socketId: string]: string;
-}
-
-const rooms: RoomMap = {};
-
 async function matchUser(socket: Socket) {
   if (!(await isUnmatchedUsers())) {
     await setUnmatchedUsers(socket.id);
@@ -73,15 +69,15 @@ async function matchUser(socket: Socket) {
   }
 
   socket.join(roomId);
+  socket.data.roomId = roomId;
 
   console.log("unmatched socket ", unmatchedSocket);
 
   unmatchedSocket[0].join(roomId);
+  unmatchedSocket[0].data.roomId = roomId;
+
   io.to(roomId).emit("matchSuccess", unmatchedUserId);
   console.log("joined", unmatchedUserId, socket.id, roomId);
-
-  await setRoomId(socket.id, roomId);
-  await setRoomId(unmatchedUserId, roomId);
 
   // rooms[socket.id] = roomId;
   // rooms[unmatchedUserId] = roomId;
@@ -95,6 +91,10 @@ io.use(async (socket, next) => {
       next(err);
     }
     console.log("decoded ", decoded);
+    const { data: email } = decoded;
+    if (!isCollegeMail(email)) next(new Error("invalid token mail"));
+    socket.data.college = getCollege(email);
+    socket.data.email = email;
     next();
   });
 });
@@ -112,22 +112,21 @@ io.on("connection", (socket) => {
   console.log("all sockets", io.sockets.allSockets());
 
   socket.on("connectNewUser", async () => {
-    const roomId = await getRoomId(socket.id);
+    const { roomId } = socket.data as SocketData;
     if (roomId) {
       socket.leave(roomId);
-      await delRoomId(socket.id);
     }
     await matchUser(socket);
   });
 
   socket.on("message", async (message) => {
-    const roomId = await getRoomId(socket.id);
+    const { roomId } = socket.data as SocketData;
     if (!roomId) return;
     socket.to(roomId).emit("newMessage", message);
   });
 
   socket.on("typing", async (isTyping: boolean) => {
-    const roomId = await getRoomId(socket.id);
+    const { roomId } = socket.data as SocketData;
     if (!roomId) return;
     if (isTyping === true || isTyping === false) {
       socket.to(roomId).emit("typing", isTyping);
@@ -135,19 +134,19 @@ io.on("connection", (socket) => {
   });
 
   socket.on("offer", async (data) => {
-    const roomId = await getRoomId(socket.id);
+    const { roomId } = socket.data as SocketData;
     // console.log("offer data", data);
     if (!roomId) return;
     socket.to(roomId).emit("newOffer", data);
   });
   socket.on("answer", async (data) => {
-    const roomId = await getRoomId(socket.id);
+    const { roomId } = socket.data as SocketData;
     if (!roomId) return;
     // console.log("answer data", data);
     socket.to(roomId).emit("newAnswer", data);
   });
   socket.on("iceCandidate", async (data: RTCIceCandidate) => {
-    const roomId = await getRoomId(socket.id);
+    const { roomId } = socket.data as SocketData;
     if (!roomId) return;
     // console.log("ice candidate", data);
     socket.to(roomId).emit("newIceCandidate", data);
@@ -155,7 +154,7 @@ io.on("connection", (socket) => {
 
   socket.on("endCall", async () => {
     console.log("ended call", socket.id);
-    const roomId = await getRoomId(socket.id);
+    const { roomId } = socket.data as SocketData;
     if (!roomId) return;
     socket.to(roomId).emit("strangerDisconnected");
     const clients = await io.in(roomId).fetchSockets();
@@ -163,13 +162,12 @@ io.on("connection", (socket) => {
       client.leave(roomId);
       console.log("ending ", client.id);
     });
-    await delRoomId(socket.id);
     await removeUnmatchedUsers(socket.id);
   });
 
   socket.on("disconnect", async () => {
     console.log("disconnected", socket.id);
-    const roomId = await getRoomId(socket.id);
+    const { roomId } = socket.data as SocketData;
     if (!roomId) return;
     socket.to(roomId).emit("strangerDisconnected");
     const clients = await io.in(roomId).fetchSockets();
@@ -177,7 +175,6 @@ io.on("connection", (socket) => {
       client.leave(roomId);
       console.log("removing ", client.id);
     });
-    await delRoomId(socket.id);
     await removeUnmatchedUsers(socket.id);
   });
 });

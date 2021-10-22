@@ -1,4 +1,4 @@
-const mailEndings = ["@srmist.edu.in"];
+const mailEndings = [".edu.in", ".ac.in"];
 const adminMails = [
   "admin@flewky.com",
   "ceo@flewky.com",
@@ -9,6 +9,7 @@ const adminMails = [
 ];
 
 function isCollegeMail(email: string) {
+  if (!email) return false;
   if (adminMails.includes(email)) return true;
   let isValid = false;
   for (let ending of mailEndings) {
