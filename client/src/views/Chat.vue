@@ -270,6 +270,12 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  if (localStream) {
+    localStream.getTracks().forEach(function (track) {
+      track.stop();
+    });
+  }
+  if (pc) pc.close();
   gState.IO.disconnect && gState.IO.disconnect();
 });
 </script>
