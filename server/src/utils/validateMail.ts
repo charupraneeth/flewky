@@ -27,6 +27,7 @@ const adminMails = [
 ];
 
 function isCollegeMail(email: string) {
+  if (!email) return false;
   if (adminMails.includes(email)) return true;
   let isValid = false;
   for (let ending of mailEndings) {

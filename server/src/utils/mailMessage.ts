@@ -196,7 +196,7 @@ body {font-family: 'Chivo', sans-serif;}
         <td style="padding:18px 40px 10px 0px; line-height:18px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: inherit"><span style="color: #00634a">If you did not request a log in, you can safely ignore this email</span></div>
 <div style="font-family: inherit; text-align: inherit"><span style="color: #00634a"><br>
 </span></div>
-<div style="font-family: inherit; text-align: inherit"><span style="color: #00634a">or Email at suppprt@flewky.com</span></div><div></div></div></td>
+<div style="font-family: inherit; text-align: inherit"><span style="color: #00634a">or Email at support@flewky.com</span></div><div></div></div></td>
       </tr>
     </tbody>
   </table><table class="module" role="module" data-type="spacer" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="c97177b8-c172-4c4b-b5bd-7604cde23e3f.1.1">
