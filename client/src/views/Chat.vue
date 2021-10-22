@@ -146,6 +146,7 @@ async function init() {
   isMatched.value = false;
   remoteStream = new MediaStream();
   messages.value = [];
+  message.value = "";
   remoteVideoLoaded.value = false;
   if (!gState.IO.id) {
     router.push("/");
