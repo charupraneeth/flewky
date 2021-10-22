@@ -15,6 +15,8 @@ const loading = ref(true);
 const token = ref("");
 const captchaToken = ref("");
 
+const isGoDisabled = ref(false);
+
 const { resetRecaptcha } = useRecaptcha();
 const recaptchaWidget = ref(null);
 
@@ -37,6 +39,7 @@ const actionReset = () => {
 
 function handleConnect() {
   try {
+    isGoDisabled.value = true;
     if (!token.value) {
       router.push("/login");
     }
@@ -67,6 +70,7 @@ function handleConnect() {
       }
     });
   } catch (error: any) {
+    isGoDisabled.value = false;
     console.log(error);
     createToast(error.message || "failed to connect socket", {
       type: "warning",
@@ -127,6 +131,7 @@ onMounted(() => {
                 class="btn call-to-action__button btn-secondary"
                 @click="handleConnect"
                 v-if="captchaToken"
+                :disabled="isGoDisabled"
               >
                 go
               </button>

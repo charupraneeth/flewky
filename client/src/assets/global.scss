@@ -32,6 +32,12 @@ body {
   &:active {
     transform: scale(0.8);
   }
+  &:disabled {
+    opacity: 0.4;
+    &:active {
+      transform: scale(1);
+    }
+  }
 }
 
 .btn-primary {
