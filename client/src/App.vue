@@ -1,6 +1,13 @@
 <script lang="ts" setup>
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
+document.addEventListener("blur", () => {
+  document.title = "Flewky - 👋 here";
+});
+
+document.addEventListener("focus", () => {
+  document.title = "Flewky";
+});
 </script>
 
 <template>
