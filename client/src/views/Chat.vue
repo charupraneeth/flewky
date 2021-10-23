@@ -24,6 +24,7 @@ const isStrangerTyping = ref(false);
 const message = ref<string>("");
 const messagesContainer = ref<HTMLDivElement>(null!);
 const messages = ref<Message[]>([]);
+const strangerCollege = ref("");
 
 const remoteVideoLoaded = ref(false);
 
@@ -98,19 +99,22 @@ async function handleRemoteTrack(event: RTCTrackEvent) {
   // await remoteVideoEl.value.play();
 }
 
-async function handleMatchSuccess(initiatorId: string) {
+async function handleMatchSuccess(chatMetaData: any) {
   try {
+    console.log("metadata ", chatMetaData);
+
     isMatched.value = true;
+    strangerCollege.value = chatMetaData?.strangerCollege;
     pc.addEventListener("icecandidate", handleIceCandidate);
     pc.addEventListener("iceconnectionstatechange", handleIceStateChange);
     pc.addEventListener("connectionstatechange", handleConnectionStateChange);
     pc.addEventListener("track", handleRemoteTrack);
-    if (initiatorId === gState.IO.id) {
+    if (chatMetaData.isHost) {
       const offer = await pc.createOffer({
         offerToReceiveAudio: true,
         offerToReceiveVideo: true,
       });
-      console.log(offer);
+      // console.log(offer);
       await pc.setLocalDescription(offer);
       console.log("offer set as LD");
       gState.IO.emit("offer", offer);
@@ -181,8 +185,8 @@ async function init() {
   }
   gState.IO.emit("connectNewUser");
 
-  gState.IO.on("matchSuccess", (id: string) => {
-    handleMatchSuccess(id);
+  gState.IO.on("matchSuccess", (chatMetaData: any) => {
+    handleMatchSuccess(chatMetaData);
   });
   gState.IO.on("newMessage", async (newMessage: string) => {
     console.log("msg recieved", newMessage);
@@ -321,20 +325,19 @@ onUnmounted(() => {
     </div>
 
     <div class="section-video">
-      <div class="video-container local-video">
-        <video ref="localVideoEl" muted autoplay playsinline>
-          waiting for your video
-        </video>
-      </div>
-      <div class="video-container remote-video">
-        <LoaderVideo v-if="!remoteVideoLoaded" />
-        <video
-          ref="remoteVideoEl"
-          autoplay
-          playsinline
-          @loadeddata="handleRemoteVideoLoad"
-        ></video>
-      </div>
+      <video class="local-video" ref="localVideoEl" muted autoplay playsinline>
+        waiting for your video
+      </video>
+
+      <LoaderVideo v-if="!remoteVideoLoaded" />
+      <div class="stranger-college">{{ strangerCollege }}</div>
+      <video
+        class="remote-video"
+        ref="remoteVideoEl"
+        autoplay
+        playsinline
+        @loadeddata="handleRemoteVideoLoad"
+      ></video>
     </div>
   </section>
 </template>
@@ -354,34 +357,34 @@ onUnmounted(() => {
 }
 
 .section-video {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  position: relative;
   // align-items: center;
-  .video-container {
+  .stranger-college {
+    display: inline-block;
     text-align: center;
-    max-height: 300px;
-    max-width: 90%;
-    margin: 0 auto;
-
-    video {
-      width: 100%;
-      padding: 10px 0;
-      height: 100%;
-      transform: rotateY(180deg);
-    }
   }
-}
-@media screen and (max-width: 450px) {
+  .remote-video {
+    max-width: 100%;
+    padding: 1rem;
+    height: 100%;
+    transform: rotateY(180deg);
+  }
   .local-video {
-    max-height: 300px !important;
-    max-width: 200px !important;
+    position: absolute;
+    bottom: 15px;
+    right: 10px;
+    z-index: 1;
+    max-width: 150px;
   }
 }
 
 .section-messages {
   background: $secondary;
-  width: 350px;
+  width: 700px;
   min-height: 200px;
   display: flex;
   flex-direction: column;
@@ -487,6 +490,12 @@ onUnmounted(() => {
         margin: 1rem 0;
       }
     }
+  }
+  .remote-video {
+    padding: 0rem;
+  }
+  .local-video {
+    width: 125px;
   }
 }
 </style>

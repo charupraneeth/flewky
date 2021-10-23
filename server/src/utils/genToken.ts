@@ -3,7 +3,7 @@ import path from "path";
 config({ path: path.join(__dirname, "../../.env") });
 import jwt from "jsonwebtoken";
 
-async function genToken(email: string) {
+function genToken(email: string) {
   const token = jwt.sign(
     {
       data: email,

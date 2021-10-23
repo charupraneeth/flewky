@@ -1,6 +1,5 @@
 import express from "express";
 import ismail from "ismail";
-import { verifyRecaptcha } from "../middlewares";
 // import { verifyRecaptcha } from "../middlewares";
 import { get } from "../redisClient";
 import genToken from "../utils/genToken";
@@ -28,7 +27,7 @@ router.post("/", async (req, res, next) => {
       throw new Error("invalid code");
     }
     // return jwt token
-    const token = await genToken(email);
+    const token = genToken(email);
     console.log(token);
     res.json({
       message: "success",

@@ -76,7 +76,15 @@ async function matchUser(socket: Socket) {
   unmatchedSocket[0].join(roomId);
   unmatchedSocket[0].data.roomId = roomId;
 
-  io.to(roomId).emit("matchSuccess", unmatchedUserId);
+  io.to(socket.id).emit("matchSuccess", {
+    isHost: false,
+    strangerCollege: unmatchedSocket[0].data?.college,
+  });
+  io.to(unmatchedUserId).emit("matchSuccess", {
+    isHost: true,
+    strangerCollege: socket.data?.college,
+  });
+
   console.log("joined", unmatchedUserId, socket.id, roomId);
 
   // rooms[socket.id] = roomId;
@@ -92,6 +100,7 @@ io.use(async (socket, next) => {
     }
     console.log("decoded ", decoded);
     const { data: email } = decoded;
+    if (!email) next(new Error("email not found in token"));
     if (!isCollegeMail(email)) next(new Error("invalid token mail"));
     socket.data.college = getCollege(email);
     socket.data.email = email;
