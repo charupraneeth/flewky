@@ -97,14 +97,15 @@ io.use(async (socket, next) => {
     if (err) {
       console.log(err);
       next(err);
+    } else {
+      console.log("decoded ", decoded);
+      const { data: email } = decoded;
+      if (!email) next(new Error("email not found in token"));
+      if (!isCollegeMail(email)) next(new Error("invalid token mail"));
+      socket.data.college = getCollege(email);
+      socket.data.email = email;
+      next();
     }
-    console.log("decoded ", decoded);
-    const { data: email } = decoded;
-    if (!email) next(new Error("email not found in token"));
-    if (!isCollegeMail(email)) next(new Error("invalid token mail"));
-    socket.data.college = getCollege(email);
-    socket.data.email = email;
-    next();
   });
 });
 

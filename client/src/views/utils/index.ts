@@ -1,4 +1,4 @@
-const mailEndings = [".edu.in", ".ac.in"];
+const mailEndings = [".edu.in", ".ac.in", ".edu"];
 const adminMails = [
   "admin@flewky.com",
   "ceo@flewky.com",

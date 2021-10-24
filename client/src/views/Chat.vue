@@ -371,7 +371,6 @@ onUnmounted(() => {
     max-width: 100%;
     padding: 1rem;
     height: 100%;
-    transform: rotateY(180deg);
   }
   .local-video {
     position: absolute;
@@ -495,7 +494,7 @@ onUnmounted(() => {
     padding: 0rem;
   }
   .local-video {
-    width: 125px;
+    width: 100px;
   }
 }
 </style>
