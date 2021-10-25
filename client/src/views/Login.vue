@@ -217,7 +217,7 @@ onMounted(() => {
   </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .login-container {
   height: 100%;
 }
@@ -236,10 +236,6 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-section {
-  display: flex;
 }
 
 .section-illustration {

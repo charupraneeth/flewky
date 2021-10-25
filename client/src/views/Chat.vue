@@ -325,19 +325,28 @@ onUnmounted(() => {
     </div>
 
     <div class="section-video">
-      <video class="local-video" ref="localVideoEl" muted autoplay playsinline>
+      <video
+        draggable="true"
+        class="local-video"
+        ref="localVideoEl"
+        muted
+        autoplay
+        playsinline
+      >
         waiting for your video
       </video>
 
       <LoaderVideo v-if="!remoteVideoLoaded" />
-      <div class="stranger-college">{{ strangerCollege }}</div>
-      <video
-        class="remote-video"
-        ref="remoteVideoEl"
-        autoplay
-        playsinline
-        @loadeddata="handleRemoteVideoLoad"
-      ></video>
+      <span class="stranger-college">{{ strangerCollege }}</span>
+      <div class="remote-video-wrap">
+        <video
+          class="remote-video"
+          ref="remoteVideoEl"
+          autoplay
+          playsinline
+          @loadeddata="handleRemoteVideoLoad"
+        ></video>
+      </div>
     </div>
   </section>
 </template>
@@ -357,20 +366,27 @@ onUnmounted(() => {
 }
 
 .section-video {
+  overflow-y: hidden;
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
-  // align-items: center;
+  align-items: center;
+  padding-bottom: 1.2rem;
   .stranger-college {
     display: inline-block;
     text-align: center;
   }
-  .remote-video {
-    max-width: 100%;
-    padding: 1rem;
-    height: 100%;
+  .remote-video-wrap {
+    text-align: center;
+    max-height: 100%;
+    // padding: 1rem;
+    .remote-video {
+      display: inline-block;
+      max-width: 100%;
+      height: 100%;
+    }
   }
   .local-video {
     position: absolute;
@@ -378,6 +394,7 @@ onUnmounted(() => {
     right: 10px;
     z-index: 1;
     max-width: 150px;
+    border-radius: 10px;
   }
 }
 
