@@ -33,6 +33,8 @@ let remoteStream: MediaStream = new MediaStream();
 
 let pc: RTCPeerConnection;
 
+let remoteVideoTimer = null as any;
+
 const localVideoEl = ref<HTMLVideoElement>(null as any);
 const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
@@ -101,6 +103,14 @@ async function handleRemoteTrack(event: RTCTrackEvent) {
 
 async function handleMatchSuccess(chatMetaData: any) {
   try {
+    remoteVideoTimer = setTimeout(async () => {
+      if (!remoteVideoLoaded.value) {
+        console.log("no remote video found");
+        await handleEndCall();
+      } else {
+        console.log("remote video loaded");
+      }
+    }, 20000);
     console.log("metadata ", chatMetaData);
 
     isMatched.value = true;
@@ -144,8 +154,16 @@ const configuration = {
 
 async function init() {
   if (pc) {
+    pc.removeEventListener("icecandidate", handleIceCandidate);
+    pc.removeEventListener("iceconnectionstatechange", handleIceStateChange);
+    pc.removeEventListener(
+      "connectionstatechange",
+      handleConnectionStateChange
+    );
+    pc.removeEventListener("track", handleRemoteTrack);
     pc.close();
   }
+  clearInterval(remoteVideoTimer);
   console.log("is matched ", isMatched.value);
   isMatched.value = false;
   remoteStream = new MediaStream();
@@ -159,10 +177,7 @@ async function init() {
   pc = new RTCPeerConnection(configuration);
 
   gState.IO.off();
-  pc.removeEventListener("icecandidate", handleIceCandidate);
-  pc.removeEventListener("iceconnectionstatechange", handleIceStateChange);
-  pc.removeEventListener("connectionstatechange", handleConnectionStateChange);
-  pc.removeEventListener("track", handleRemoteTrack);
+
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
       video: true,
