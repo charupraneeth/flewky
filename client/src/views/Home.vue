@@ -59,13 +59,15 @@ function handleConnect() {
       router.push("/app");
     });
     gState.IO.on("connect_error", (err) => {
+      console.log("connect_error ", err);
       if (err.message.includes("jwt")) {
         createToast("prev token expired, login again", { type: "warning" });
         localStorage.clear();
         console.log("pushing");
         gState.IO = {} as any;
+        ioObject.disconnect && ioObject.disconnect();
+        console.log("dis");
         router.push("/login");
-        gState.IO.disconnect && gState.IO.disconnect();
         return;
       }
     });
