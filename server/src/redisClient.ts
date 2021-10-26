@@ -1,5 +1,4 @@
 import Redis from "ioredis";
-import { Socket } from "socket.io";
 import { inProd } from "./constants";
 
 let redis: Redis.Redis;
@@ -55,6 +54,7 @@ async function delRoomId(socketId: string) {
 }
 
 export {
+  redis,
   get,
   del,
   setEx,

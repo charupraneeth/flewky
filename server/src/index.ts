@@ -26,6 +26,7 @@ import {
 } from "./redisClient";
 import { getCollege, isCollegeMail } from "./utils/validateMail";
 import { SocketData } from "./@types";
+import { rlSocketClient } from "./middlewares/rateLimit";
 
 config({ path: path.join(__dirname, "../.env") });
 
@@ -94,21 +95,30 @@ async function matchUser(socket: Socket) {
 }
 
 io.use(async (socket, next) => {
-  const token = socket.handshake.auth.token;
-  jwt.verify(token, process.env.JWT_SECRET as any, (err: any, decoded: any) => {
-    if (err) {
-      console.log(err);
-      next(err);
-    } else {
-      console.log("decoded ", decoded);
-      const { data: email } = decoded;
-      if (!email) next(new Error("email not found in token"));
-      if (!isCollegeMail(email)) next(new Error("invalid token mail"));
-      socket.data.college = getCollege(email);
-      socket.data.email = email;
-      next();
-    }
-  });
+  try {
+    const token = socket.handshake.auth.token;
+    await rlSocketClient.consume(token);
+    jwt.verify(
+      token,
+      process.env.JWT_SECRET as any,
+      (err: any, decoded: any) => {
+        if (err) {
+          console.log(err);
+          next(err);
+        } else {
+          console.log("decoded ", decoded);
+          const { data: email } = decoded;
+          if (!email) next(new Error("email not found in token"));
+          if (!isCollegeMail(email)) next(new Error("invalid token mail"));
+          socket.data.college = getCollege(email);
+          socket.data.email = email;
+          next();
+        }
+      }
+    );
+  } catch (error) {
+    next(error as Error);
+  }
 });
 
 io.use(async (socket, next) => {

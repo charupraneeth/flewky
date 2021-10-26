@@ -1,12 +1,13 @@
 import express from "express";
 import ismail from "ismail";
+import { rateLimiterVerify } from "../middlewares/rateLimit";
 // import { verifyRecaptcha } from "../middlewares";
 import { del, get } from "../redisClient";
 import genToken from "../utils/genToken";
 
 const router = express.Router();
 
-router.post("/", async (req, res, next) => {
+router.post("/", rateLimiterVerify, async (req, res, next) => {
   try {
     const { email, code }: { email: string; code: string } = req.body;
     if (!email || !email.trim()) {

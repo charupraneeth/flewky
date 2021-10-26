@@ -396,11 +396,13 @@ onUnmounted(() => {
   .remote-video-wrap {
     text-align: center;
     max-height: 100%;
+    width: 100%;
     // padding: 1rem;
     .remote-video {
+      width: 100%;
       display: inline-block;
       max-width: 100%;
-      height: 100%;
+      height: auto;
     }
   }
   .local-video {

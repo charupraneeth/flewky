@@ -20,6 +20,7 @@
     "ioredis": "^4.27.10",
     "ismail": "^1.2.0",
     "jsonwebtoken": "^8.5.1",
+    "rate-limiter-flexible": "^2.3.1",
     "socket.io": "^4.2.0"
   },
   "devDependencies": {

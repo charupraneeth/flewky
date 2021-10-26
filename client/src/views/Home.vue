@@ -70,6 +70,10 @@ function handleConnect() {
         router.push("/login");
         return;
       }
+      createToast(err.message || "failed to establish socket connection", {
+        type: "danger",
+      });
+      isGoDisabled.value = false;
     });
   } catch (error: any) {
     isGoDisabled.value = false;
