@@ -16,6 +16,10 @@ async function get(key: string) {
   const value = await redis.get(key);
   return value;
 }
+async function del(key: string) {
+  await redis.del(key);
+}
+
 async function setEx(key: string, ttl: number, value: string) {
   await redis.setex(key, ttl, value);
 }
@@ -52,6 +56,7 @@ async function delRoomId(socketId: string) {
 
 export {
   get,
+  del,
   setEx,
   isUnmatchedUsers,
   setUnmatchedUsers,

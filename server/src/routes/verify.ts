@@ -1,7 +1,7 @@
 import express from "express";
 import ismail from "ismail";
 // import { verifyRecaptcha } from "../middlewares";
-import { get } from "../redisClient";
+import { del, get } from "../redisClient";
 import genToken from "../utils/genToken";
 
 const router = express.Router();
@@ -29,6 +29,7 @@ router.post("/", async (req, res, next) => {
     // return jwt token
     const token = genToken(email);
     console.log(token);
+    del(email);
     res.json({
       message: "success",
       data: token,
