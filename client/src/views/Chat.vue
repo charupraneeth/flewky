@@ -17,6 +17,8 @@ import { useRouter } from "vue-router";
 import { Message } from "../@types";
 import gState from "../store";
 // import { iceConfig } from "../consts";
+const audioUrl = new URL("../assets/success.mp3", import.meta.url).href;
+console.log(audioUrl);
 
 const router = useRouter();
 const isMatched = ref<Boolean>(false);
@@ -41,7 +43,8 @@ const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 let debounceTimeout: ReturnType<typeof setTimeout>;
 let isTypingTimeout: ReturnType<typeof setTimeout>;
 
-function handleRemoteVideoLoad() {
+async function handleRemoteVideoLoad() {
+  await document.querySelector("audio")?.play();
   remoteVideoLoaded.value = true;
 }
 
@@ -340,20 +343,14 @@ onUnmounted(() => {
     </div>
 
     <div class="section-video">
-      <video
-        draggable="true"
-        class="local-video"
-        ref="localVideoEl"
-        muted
-        autoplay
-        playsinline
-      >
+      <video class="local-video" ref="localVideoEl" muted autoplay playsinline>
         waiting for your video
       </video>
 
       <LoaderVideo v-if="!remoteVideoLoaded" />
       <span class="stranger-college">{{ strangerCollege }}</span>
       <div class="remote-video-wrap">
+        <audio :src="audioUrl">this is audio</audio>
         <video
           class="remote-video"
           ref="remoteVideoEl"
