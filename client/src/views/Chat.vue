@@ -388,7 +388,8 @@ onUnmounted(() => {
   flex-direction: column;
   position: relative;
   align-items: center;
-  padding-bottom: 1.2rem;
+  justify-content: center;
+
   .stranger-college {
     display: inline-block;
     text-align: center;
@@ -397,9 +398,10 @@ onUnmounted(() => {
     text-align: center;
     max-height: 100%;
     width: 100%;
+
     // padding: 1rem;
     .remote-video {
-      width: 100%;
+      width: 80%;
       display: inline-block;
       max-width: 100%;
       height: auto;
@@ -517,6 +519,7 @@ onUnmounted(() => {
   .section-chat-dashboard {
     flex-direction: column-reverse;
     .section-messages {
+      max-height: 220px;
       width: 100%;
       overflow-y: auto;
       .message-input {
@@ -526,6 +529,7 @@ onUnmounted(() => {
   }
   .remote-video {
     padding: 0rem;
+    min-width: 95%;
   }
   .local-video {
     width: 100px;
