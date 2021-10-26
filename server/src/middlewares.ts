@@ -14,9 +14,9 @@ function notFound(req: Request, res: Response, next: NextFunction) {
 /* eslint-disable no-unused-vars */
 function errorHandler(
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) {
   /* eslint-enable no-unused-vars */
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
@@ -70,12 +70,14 @@ async function verifyRecaptchaHook(
 
 async function verifyRecaptcha(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) {
   console.log(req.body);
-
   const { captchaToken } = req.body;
+  if (!captchaToken || !captchaToken.trim()) {
+    return next(new Error("no/invalid captcha"));
+  }
   verifyRecaptchaHook(captchaToken, next);
 }
 
