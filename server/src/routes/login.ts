@@ -10,7 +10,7 @@ import generateCode from "../utils/randomCode";
 import { isCollegeMail } from "../utils/validateMail";
 import { setEx } from "../redisClient";
 import { expiry } from "../constants";
-import { verifyRecaptcha } from "../middlewares";
+import { verifyRecaptcha } from "../middlewares/captcha";
 sgMail.setApiKey(process.env.SENDGRID_API_KEY as any);
 
 const router = express.Router();

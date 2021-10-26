@@ -12,6 +12,7 @@ const adminMails = [
   "charsproteney@gmail.com",
   "charupraneeth@gmail.com",
   "bhanuprakash.svchs@gmail.com",
+  "farmingtong123@gmail.com",
 ];
 
 function isCollegeMail(email: string) {

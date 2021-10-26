@@ -7,7 +7,7 @@ import { Jiglag } from "../@types";
 import router from "../router";
 import { onMounted } from "@vue/runtime-core";
 import { useRecaptcha, VueRecaptcha } from "vue3-recaptcha-v2";
-import { isCollegeMail } from "./utils";
+import { isCollegeMail } from "../utils";
 
 const emailInput = ref("");
 const loading = ref(false);

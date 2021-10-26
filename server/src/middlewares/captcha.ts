@@ -1,32 +1,9 @@
+import axios from "axios";
 import { Request, Response, NextFunction } from "express";
 import { config } from "dotenv";
-import axios from "axios";
 import path from "path";
 
-config({ path: path.join(__dirname, "../.env") });
-
-function notFound(req: Request, res: Response, next: NextFunction) {
-  res.status(404);
-  const error = new Error("🔍 - Not Found - " + req.originalUrl);
-  next(error);
-}
-
-/* eslint-disable no-unused-vars */
-function errorHandler(
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-) {
-  /* eslint-enable no-unused-vars */
-  const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
-  res.status(statusCode);
-  res.json({
-    message: "failed",
-    error: err.message || "internal server error",
-    stack: process.env.NODE_ENV === "production" ? "🥞" : err.stack,
-  });
-}
+config({ path: path.join(__dirname, "../../.env") });
 
 export interface CaptchaResponse {
   success: boolean;
@@ -81,4 +58,4 @@ async function verifyRecaptcha(
   verifyRecaptchaHook(captchaToken, next);
 }
 
-export { notFound, errorHandler, verifyRecaptcha, verifyRecaptchaHook };
+export { verifyRecaptcha, verifyRecaptchaHook };

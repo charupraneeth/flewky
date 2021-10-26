@@ -10,7 +10,9 @@ import path from "path";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 
-import { errorHandler, notFound, verifyRecaptchaHook } from "./middlewares";
+import { errorHandler, notFound } from "./middlewares/errorHandle";
+import { verifyRecaptchaHook } from "./middlewares/captcha";
+
 import api from "./api";
 import { inProd } from "./constants";
 import {
