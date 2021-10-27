@@ -201,6 +201,7 @@ io.on("connection", (socket) => {
   });
 });
 
+app.set("trust proxy", 1);
 app.use(helmet());
 app.use(express.json());
 app.use(cors());
