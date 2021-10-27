@@ -93,7 +93,7 @@ function handleConnectionStateChange() {
     createToast(pc.connectionState, { type: "success" });
   } else if (failedStates.includes(pc.connectionState)) {
     createToast(pc.connectionState, { type: "danger" });
-    init();
+    handleEndCall();
   }
 }
 async function handleRemoteTrack(event: RTCTrackEvent) {
@@ -363,7 +363,7 @@ onUnmounted(() => {
   </section>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .section-loader {
   height: 100%;
   color: $tertiary;
@@ -378,6 +378,7 @@ onUnmounted(() => {
 }
 
 .section-video {
+  background: rgb(210, 224, 231);
   overflow-y: hidden;
   width: 100%;
   height: 100%;
@@ -402,6 +403,7 @@ onUnmounted(() => {
       display: inline-block;
       max-width: 100%;
       height: auto;
+      border-radius: 10px;
     }
   }
   .local-video {
@@ -415,7 +417,7 @@ onUnmounted(() => {
 }
 
 .section-messages {
-  background: $secondary;
+  background: $primary;
   width: 700px;
   min-height: 200px;
   display: flex;
@@ -441,7 +443,7 @@ onUnmounted(() => {
 
       color: white;
 
-      background: $tertiary;
+      background: red;
       i {
         transform: rotate(225deg);
       }
@@ -464,19 +466,19 @@ onUnmounted(() => {
       }
     }
     input {
-      color: $tertiary;
+      color: $primary;
       font-size: 0.95rem;
       border-radius: 8px;
       width: 90%;
       background: $secondary;
-      border: 2px solid white;
+      border: 2px solid $secondary;
       padding: 0.6rem 0.75rem;
       outline: none;
       &:focus {
-        outline: 0.5px solid white;
+        outline: 0.5px solid $primary;
       }
       &::placeholder {
-        color: white;
+        color: $primary;
         font-weight: bold;
       }
     }
@@ -500,14 +502,14 @@ onUnmounted(() => {
     margin: 0 1rem;
     padding: 0.4rem 0.8rem;
     background: $tertiary;
-    color: white;
+    color: $primary;
   }
   &.author {
     margin: 1.4rem 0 1.4rem 2rem;
     justify-content: flex-end;
     .message__content {
-      background: white;
-      color: $tertiary;
+      background: $secondary;
+      color: $primary;
     }
   }
 }

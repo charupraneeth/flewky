@@ -27,5 +27,12 @@ main {
   height: 100%;
   min-height: 100%;
   background: $primary;
+  border: 1px solid rgb(239, 243, 244);
+  padding: 0 1rem;
+}
+@media screen and (max-width: 640px) {
+  main {
+    padding: 0 0.125rem;
+  }
 }
 </style>

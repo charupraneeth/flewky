@@ -9,6 +9,7 @@ import { useRecaptcha, VueRecaptcha } from "vue3-recaptcha-v2";
 
 import Loader from "../components/Loader.vue";
 import { Jiglag } from "../@types";
+import Footer from "../components/Footer.vue";
 
 const router = useRouter();
 const loading = ref(true);
@@ -111,50 +112,49 @@ onMounted(() => {
     <Loader />
   </section>
   <div class="home-container" v-else>
-    <main>
-      <nav>
-        <router-link class="logo" to="/">Flewky</router-link>
-      </nav>
-      <section>
-        <div class="section-intro">
-          <div class="headline">
-            <h1>From strangers to friends the journey just got easy</h1>
-          </div>
-          <div class="call-to-action">
-            <h3 class="call-to-action__label">Click below</h3>
+    <nav>
+      <router-link class="logo" to="/">Flewky</router-link>
+    </nav>
+    <section>
+      <div class="section-intro">
+        <div class="headline">
+          <h1>From strangers to friends the journey just got easy</h1>
+        </div>
+        <div class="call-to-action">
+          <h3 class="call-to-action__label">Click below</h3>
 
-            <div class="call-to-action__buttons">
-              <vue-recaptcha
-                theme="light"
-                size="normal"
-                :tabindex="0"
-                @widgetId="recaptchaWidget = $event"
-                @verify="callbackVerify($event)"
-                @expired="callbackExpired()"
-                @fail="callbackFail()"
-              />
-              <button
-                class="btn call-to-action__button btn-secondary"
-                @click="handleConnect"
-                v-if="captchaToken"
-                :disabled="isGoDisabled"
-              >
-                go
-              </button>
-              <!-- <button
+          <div class="call-to-action__buttons">
+            <vue-recaptcha
+              theme="light"
+              size="normal"
+              :tabindex="0"
+              @widgetId="recaptchaWidget = $event"
+              @verify="callbackVerify($event)"
+              @expired="callbackExpired()"
+              @fail="callbackFail()"
+            />
+            <button
+              class="btn call-to-action__button btn-secondary"
+              @click="handleConnect"
+              v-if="captchaToken"
+              :disabled="isGoDisabled"
+            >
+              go
+            </button>
+            <!-- <button
               class="btn call-to-action__button btn-primary"
               @click="handleConnect"
             >
               Text
             </button> -->
-            </div>
           </div>
         </div>
-        <div class="section-illustration">
-          <img src="../assets/landing_illustration.svg" alt="" />
-        </div>
-      </section>
-    </main>
+      </div>
+      <div class="section-illustration">
+        <img src="../assets/landing_illustration.svg" alt="" />
+      </div>
+    </section>
+    <Footer />
   </div>
 </template>
 
@@ -169,9 +169,9 @@ onMounted(() => {
 
 .home-container {
   height: 100%;
-}
-.home-container {
-  padding: 0 0 0 6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .logo {
@@ -187,14 +187,13 @@ section {
 
 .section-illustration {
   width: 100%;
-  margin-top: 4rem;
   img {
     width: 100%;
     height: auto;
   }
 }
 .headline {
-  margin: 7rem 0 4rem 0;
+  margin: 3rem 0;
   h1 {
     font-weight: 500 !important;
     text-align: left;
@@ -203,6 +202,9 @@ section {
 
 .call-to-action__label {
   text-align: left;
+  color: $secondary;
+  font-weight: bold;
+  font-size: 1.5rem;
 }
 .call-to-action__buttons {
   margin-top: 1rem;

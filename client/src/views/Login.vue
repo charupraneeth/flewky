@@ -8,6 +8,7 @@ import router from "../router";
 import { onMounted } from "@vue/runtime-core";
 import { useRecaptcha, VueRecaptcha } from "vue3-recaptcha-v2";
 import { isCollegeMail } from "../utils";
+import Footer from "../components/Footer.vue";
 
 const emailInput = ref("");
 const loading = ref(false);
@@ -149,80 +150,79 @@ onMounted(() => {
     <Loader />
   </section>
   <div class="login-container" v-else>
-    <main>
-      <nav>
-        <router-link class="logo" to="/">Flewky</router-link>
-      </nav>
-      <section>
-        <div class="left-section">
-          <div class="email-form" v-if="!isMailSent">
-            <div class="email-wrap">
-              <label for="email">Enter you email below</label>
-              <input
-                v-model="emailInput"
-                class="email"
-                type="email"
-                name="email"
-                id="email"
-                placeholder="name@school.edu.in"
-                maxlength="100"
-              />
-            </div>
-            <div>
-              <vue-recaptcha
-                theme="light"
-                size="normal"
-                :tabindex="0"
-                @widgetId="recaptchaWidget = $event"
-                @verify="callbackVerify($event)"
-                @expired="callbackExpired()"
-                @fail="callbackFail()"
-              />
-              <button
-                class="btn-secondary"
-                type="submit"
-                @click="verifyEmail"
-                v-if="captchaToken"
-              >
-                verify email
-              </button>
-            </div>
+    <nav>
+      <router-link class="logo" to="/">Flewky</router-link>
+    </nav>
+    <section>
+      <div class="left-section">
+        <div class="email-form" v-if="!isMailSent">
+          <div class="email-wrap">
+            <label for="email">Enter you email below</label>
+            <input
+              v-model="emailInput"
+              class="email"
+              type="email"
+              name="email"
+              id="email"
+              placeholder="name@school.edu.in"
+              maxlength="100"
+            />
           </div>
-          <div class="vcode-form" v-else>
-            <div class="vcode-wrap">
-              <label for="email">Enter you verification code below</label>
-              <input
-                v-model="verificationCode"
-                class="code"
-                type="text"
-                name="code"
-                id="code"
-                placeholder="909090"
-                maxlength="6"
-              />
-            </div>
-            <div>
-              <button class="btn-secondary" type="submit" @click="verifyCode">
-                verify code
-              </button>
-            </div>
+          <div>
+            <vue-recaptcha
+              theme="light"
+              size="normal"
+              :tabindex="0"
+              @widgetId="recaptchaWidget = $event"
+              @verify="callbackVerify($event)"
+              @expired="callbackExpired()"
+              @fail="callbackFail()"
+            />
+            <button
+              class="btn-secondary"
+              type="submit"
+              @click="verifyEmail"
+              v-if="captchaToken"
+            >
+              verify email
+            </button>
           </div>
         </div>
+        <div class="vcode-form" v-else>
+          <div class="vcode-wrap">
+            <label for="email">Enter you verification code below</label>
+            <input
+              v-model="verificationCode"
+              class="code"
+              type="text"
+              name="code"
+              id="code"
+              placeholder="909090"
+              maxlength="6"
+            />
+          </div>
+          <div>
+            <button class="btn-secondary" type="submit" @click="verifyCode">
+              verify code
+            </button>
+          </div>
+        </div>
+      </div>
 
-        <div class="section-illustration">
-          <img src="../assets/landing_illustration.svg" alt="" />
-        </div>
-      </section>
-    </main>
+      <div class="section-illustration">
+        <img src="../assets/landing_illustration.svg" alt="" />
+      </div>
+    </section>
+    <Footer />
   </div>
 </template>
 
 <style lang="scss" scoped>
 .login-container {
   height: 100%;
-}
-.login-container {
-  padding: 0 0 0 6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .logo {
@@ -243,7 +243,6 @@ section {
 }
 .section-illustration {
   width: 100%;
-  margin-top: 4rem;
   img {
     width: 100%;
     height: auto;
@@ -251,7 +250,6 @@ section {
 }
 .left-section {
   width: 100%;
-
   text-align: left;
   display: flex;
   justify-content: center;
@@ -259,6 +257,14 @@ section {
   flex-direction: column;
 }
 
+.email-wrap,
+.vcode-wrap {
+  label {
+    font-weight: bold;
+    color: $secondary;
+    font-size: 2rem;
+  }
+}
 .email,
 .code {
   width: 100%;
