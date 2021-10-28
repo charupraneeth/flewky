@@ -14,7 +14,7 @@ import {
   watchEffect,
 } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
-import { Message } from "../@types";
+import { Message, Positions } from "../@types";
 import gState from "../store";
 // import { iceConfig } from "../consts";
 const audioUrl = new URL("../assets/success.mp3", import.meta.url).href;
@@ -42,6 +42,51 @@ const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
 let debounceTimeout: ReturnType<typeof setTimeout>;
 let isTypingTimeout: ReturnType<typeof setTimeout>;
+
+const positions: Positions = {
+  clientX: undefined,
+  clientY: undefined,
+  movementX: 0,
+  movementY: 0,
+};
+
+function elementDrag(event: MouseEvent) {
+  event.preventDefault();
+  if (!positions.clientX || !positions.clientY) return;
+  positions.movementX = positions.clientX - event.clientX;
+  positions.movementY = positions.clientY - event.clientY;
+  positions.clientX = event.clientX;
+  positions.clientY = event.clientY;
+  // set the element's new position:
+  // console.log(
+  //   localVideoEl.value.offsetLeft - positions.movementX,
+  //   localVideoEl.value.offsetTop - positions.movementY
+  // );
+  const top = localVideoEl.value.offsetTop - positions.movementY;
+  const left = localVideoEl.value.offsetLeft - positions.movementX;
+  const parent = localVideoEl.value.parentElement;
+  if (!parent) return;
+  if (top < 5 || top > parent?.offsetHeight - localVideoEl.value.offsetHeight)
+    return;
+  if (left < 5 || left > parent?.offsetWidth - localVideoEl.value.offsetWidth)
+    return;
+  localVideoEl.value.style.top = top + "px";
+  localVideoEl.value.style.left = left + "px";
+}
+
+function closeDragElement() {
+  document.onmouseup = null;
+  document.onmousemove = null;
+}
+
+function dragMouseDown(event: MouseEvent) {
+  event.preventDefault();
+  // get the mouse cursor position at startup:
+  positions.clientX = event.clientX;
+  positions.clientY = event.clientY;
+  document.onmousemove = elementDrag;
+  document.onmouseup = closeDragElement;
+}
 
 async function handleRemoteVideoLoad() {
   await document.querySelector("audio")?.play();
@@ -343,7 +388,14 @@ onUnmounted(() => {
     </div>
 
     <div class="section-video">
-      <video class="local-video" ref="localVideoEl" muted autoplay playsinline>
+      <video
+        class="local-video"
+        ref="localVideoEl"
+        muted
+        autoplay
+        playsinline
+        @mousedown="dragMouseDown"
+      >
         waiting for your video
       </video>
 

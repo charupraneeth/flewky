@@ -277,7 +277,7 @@ section {
   outline: none;
 }
 button {
-  margin-top: 1rem;
+  margin: 1rem 0;
   cursor: pointer;
   border: none;
   border-radius: 5px;

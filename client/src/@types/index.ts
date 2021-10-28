@@ -14,3 +14,9 @@ export interface Message {
   content: string;
   isAuthor: boolean;
 }
+export interface Positions {
+  clientX: undefined | number;
+  clientY: undefined | number;
+  movementX: number;
+  movementY: number;
+}
