@@ -89,7 +89,7 @@ function dragMouseDown(event: MouseEvent) {
 }
 
 async function handleRemoteVideoLoad() {
-  await document.querySelector("audio")?.play();
+  // await document.querySelector("audio")?.play();
   remoteVideoLoaded.value = true;
 }
 
@@ -448,6 +448,14 @@ onUnmounted(() => {
     text-align: center;
     max-height: 100%;
     width: 100%;
+    position: relative;
+    &::after {
+      content: "flewky";
+      position: absolute;
+      top: 95%;
+      left: 12%;
+      opacity: 0.4;
+    }
 
     // padding: 1rem;
     .remote-video {
@@ -577,6 +585,13 @@ onUnmounted(() => {
         margin: 1rem 0;
       }
     }
+  }
+  .remote-video-wrap::after {
+    content: "flewky";
+    position: absolute;
+    top: 92% !important;
+    left: 6% !important;
+    opacity: 0.4;
   }
   .remote-video {
     padding: 0rem;
