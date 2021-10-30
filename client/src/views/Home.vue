@@ -38,6 +38,13 @@ const actionReset = () => {
   resetRecaptcha(recaptchaWidget.value as any);
 };
 
+function handleSignout() {
+  gState.IO.disconnect && gState.IO.disconnect();
+  localStorage.clear();
+  createToast("signed out", { type: "info" });
+  router.push("/login");
+}
+
 function handleConnect() {
   try {
     isGoDisabled.value = true;
@@ -59,8 +66,10 @@ function handleConnect() {
       loading.value = false;
       router.push("/app");
     });
+
     gState.IO.on("connect_error", (err) => {
       console.log("connect_error ", err);
+      gState.IO.disconnect();
       if (err.message.includes("jwt")) {
         createToast("prev token expired, login again", { type: "warning" });
         localStorage.clear();
@@ -112,8 +121,11 @@ onMounted(() => {
     <Loader />
   </section>
   <div class="home-container" v-else>
-    <nav>
+    <nav class="navbar">
       <router-link class="logo" to="/">Flewky</router-link>
+      <button class="btn" @click="handleSignout">
+        sign out <i class="fas fa-sign-out-alt"></i>
+      </button>
     </nav>
     <section>
       <div class="section-intro">
@@ -178,6 +190,11 @@ onMounted(() => {
   text-decoration: underline;
   color: $secondary;
   font-size: 2rem;
+}
+nav.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 section {

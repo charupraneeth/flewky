@@ -16,6 +16,7 @@ import {
 import { useRouter } from "vue-router";
 import { Message, Positions } from "../@types";
 import gState from "../store";
+import Report from "../components/Report.vue";
 // import { iceConfig } from "../consts";
 const audioUrl = new URL("../assets/success.mp3", import.meta.url).href;
 console.log(audioUrl);
@@ -177,7 +178,7 @@ async function handleMatchSuccess(chatMetaData: any) {
       console.log("offer set as LD");
       gState.IO.emit("offer", offer);
     }
-    createToast("trying to send the offer", { type: "info" });
+    // createToast("trying to send the offer", { type: "info" });
   } catch (error) {
     createToast("failed to send the offer", { type: "danger" });
   }
@@ -271,7 +272,7 @@ async function init() {
       const remoteDescription = new RTCSessionDescription(newOffer);
       await pc.setRemoteDescription(remoteDescription);
       console.log("description set from answer");
-      createToast("recieved answer, trying to connect", { type: "info" });
+      // createToast("recieved answer, trying to connect", { type: "info" });
     } catch (error) {
       console.log("err", error);
       createToast("failed to set answer", { type: "danger" });
@@ -310,6 +311,13 @@ async function init() {
     init();
   });
 
+  gState.IO.on("ban", () => {
+    createToast("you have been banned for inappropritate activity", {
+      type: "danger",
+    }),
+      router.push("/");
+  });
+
   watchEffect(async () => {
     if (localVideoEl.value) {
       localVideoEl.value.srcObject = localStream;
@@ -345,6 +353,7 @@ onUnmounted(() => {
   }
   if (pc) pc.close();
   gState.IO.disconnect && gState.IO.disconnect();
+  console.log("this con");
 });
 </script>
 <template>
@@ -352,6 +361,7 @@ onUnmounted(() => {
     <Loader /><small>trying to find you the right person...</small>
   </section>
   <section class="section-chat-dashboard" v-else>
+    <Report v-if="remoteVideoLoaded" />
     <div class="section-messages">
       <div class="messages-container" ref="messagesContainer">
         <p class="message-placeholder" v-if="!messages.length">
@@ -427,6 +437,7 @@ onUnmounted(() => {
 .section-chat-dashboard {
   height: 100%;
   display: flex;
+  position: relative;
 }
 
 .section-video {

@@ -14,13 +14,14 @@ import { errorHandler, notFound } from "./middlewares/errorHandle";
 import { verifyRecaptchaHook } from "./middlewares/captcha";
 
 import api from "./api";
-import { inProd } from "./constants";
+import { inProd, maxReports } from "./constants";
 import {
   // delRoomId,
   // getRoomId,
   // setRoomId,
   isUnmatchedUsers,
   popUnmatchedUsers,
+  redis,
   removeUnmatchedUsers,
   setUnmatchedUsers,
 } from "./redisClient";
@@ -58,23 +59,40 @@ async function matchUser(socket: Socket) {
     await setUnmatchedUsers(socket.id);
     return;
   }
-
+  const { reports } = socket.data;
+  reports && console.log("reports new match ", reports);
+  if (reports >= maxReports) {
+    io.to(socket.id).emit("ban");
+    socket.disconnect();
+    console.log("banned ", socket.id, socket?.data?.email);
+    return;
+  }
   const unmatchedUserId: string = await popUnmatchedUsers();
   if (unmatchedUserId === socket.id) return;
   const roomId = unmatchedUserId + "#" + socket.id;
   console.log("unmatched user from redis ", unmatchedUserId);
 
   const unmatchedSocket = await io.in(unmatchedUserId).fetchSockets();
-  if (!unmatchedSocket || !unmatchedSocket.length) {
-    console.log("removing from here");
-    await removeUnmatchedUsers(unmatchedUserId);
-    return await setUnmatchedUsers(socket.id);
+
+  const { reports: unmatchedSocketReports } = unmatchedSocket[0].data;
+  unmatchedSocketReports &&
+    console.log("reports un match ", unmatchedSocketReports);
+  if (
+    unmatchedSocketReports &&
+    parseInt(unmatchedSocketReports) >= maxReports
+  ) {
+    io.to(socket.id).emit("ban");
+    socket.disconnect();
+    console.log("banned ", socket.id, socket?.data?.email);
+    // push the socket in queue
+    await setUnmatchedUsers(socket.id);
+    return;
   }
 
   socket.join(roomId);
   socket.data.roomId = roomId;
 
-  console.log("unmatched socket ", unmatchedSocket);
+  // console.log("unmatched socket ", unmatchedSocket);
 
   unmatchedSocket[0].join(roomId);
   unmatchedSocket[0].data.roomId = roomId;
@@ -101,7 +119,7 @@ io.use(async (socket, next) => {
     jwt.verify(
       token,
       process.env.JWT_SECRET as any,
-      (err: any, decoded: any) => {
+      async (err: any, decoded: any) => {
         if (err) {
           console.log(err);
           next(err);
@@ -110,8 +128,14 @@ io.use(async (socket, next) => {
           const { data: email } = decoded;
           if (!email) next(new Error("email not found in token"));
           if (!isCollegeMail(email)) next(new Error("invalid token mail"));
+          const reports = await redis.get(`ban:${email}`);
+          if (reports && parseInt(reports) >= maxReports) {
+            next(new Error("you have been banned for inppropriate acivity"));
+            return;
+          }
           socket.data.college = getCollege(email);
           socket.data.email = email;
+          socket.data.reports = reports ? parseInt(reports) : 0;
           next();
         }
       }
@@ -131,7 +155,8 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
   console.log(`socketd connected `, socket.id);
-  console.log("all sockets", io.sockets.allSockets());
+
+  io.sockets.allSockets().then((data) => console.log(data.size));
 
   socket.on("connectNewUser", async () => {
     const { roomId } = socket.data as SocketData;
@@ -161,12 +186,14 @@ io.on("connection", (socket) => {
     if (!roomId) return;
     socket.to(roomId).emit("newOffer", data);
   });
+
   socket.on("answer", async (data) => {
     const { roomId } = socket.data as SocketData;
     if (!roomId) return;
     // console.log("answer data", data);
     socket.to(roomId).emit("newAnswer", data);
   });
+
   socket.on("iceCandidate", async (data: RTCIceCandidate) => {
     const { roomId } = socket.data as SocketData;
     if (!roomId) return;
@@ -174,15 +201,42 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("newIceCandidate", data);
   });
 
+  socket.on("report", async () => {
+    try {
+      const { roomId } = socket.data as SocketData;
+      if (!roomId) return;
+      // console.log("ice candidate", data);
+      const reportedId = roomId.split("#").find((id) => id !== socket.id);
+      if (!reportedId) return;
+      const reportedSocket = await io.in(reportedId).fetchSockets();
+      const reportedEmail = reportedSocket[0]?.data?.email;
+      console.log(reportedEmail);
+      const prevReports = reportedSocket[0].data.reports;
+      if (!isNaN(parseInt(prevReports))) {
+        reportedSocket[0].data.reports = parseInt(prevReports) + 1;
+        console.log("new reports ", reportedSocket[0].data.reports);
+      }
+      if (!reportedEmail) return;
+      await redis.incr(`ban:${reportedEmail}`);
+      if (parseInt(prevReports) === maxReports - 1) {
+        await redis.expire(`ban:${reportedEmail}`, 60 * 60 * 24);
+        io.to(reportedId).emit("ban");
+        return;
+      }
+      await redis.expire(`ban:${reportedEmail}`, 60 * 10);
+    } catch (error) {
+      console.log("failed to report");
+    }
+  });
+
   socket.on("endCall", async () => {
-    console.log("ended call", socket.id);
     const { roomId } = socket.data as SocketData;
     if (!roomId) return;
     socket.to(roomId).emit("strangerDisconnected");
     const clients = await io.in(roomId).fetchSockets();
     clients.forEach(async (client) => {
       client.leave(roomId);
-      console.log("ending ", client.id);
+      // console.log("ending ", client.id);
     });
     await removeUnmatchedUsers(socket.id);
   });
