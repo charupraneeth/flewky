@@ -34,7 +34,7 @@ async function popUnmatchedUsers() {
 }
 async function removeUnmatchedUsers(socketId: string) {
   console.log("removing socket ", socketId);
-  await redis.lrem("unmatchedUser", 0, socketId);
+  await redis.lrem("unmatchedUsers", 0, socketId);
 }
 
 async function setRoomId(socketId: string, roomId: string) {
