@@ -7,3 +7,5 @@ export const inProd = process.env.NODE_ENV !== "development";
 export const expiry = 60 * 2; // 2 mintues
 
 export const maxReports = 6;
+
+export const queueName = inProd ? "unmatched" : "dev:unmatched";

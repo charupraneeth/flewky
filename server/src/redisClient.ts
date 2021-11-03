@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { inProd } from "./constants";
+import { inProd, queueName } from "./constants";
 
 let redis: Redis.Redis;
 // create and connect redis client to local instance.
@@ -23,18 +23,18 @@ async function setEx(key: string, ttl: number, value: string) {
   await redis.setex(key, ttl, value);
 }
 async function isUnmatchedUsers() {
-  return await redis.llen("unmatchedUsers");
+  return await redis.llen(queueName);
 }
 
 async function setUnmatchedUsers(socketId: string) {
-  await redis.rpush("unmatchedUsers", socketId);
+  await redis.rpush(queueName, socketId);
 }
 async function popUnmatchedUsers() {
-  return await redis.lpop("unmatchedUsers");
+  return await redis.lpop(queueName);
 }
 async function removeUnmatchedUsers(socketId: string) {
   console.log("removing socket ", socketId);
-  await redis.lrem("unmatchedUsers", 0, socketId);
+  await redis.lrem(queueName, 0, socketId);
 }
 
 async function setRoomId(socketId: string, roomId: string) {
