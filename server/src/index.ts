@@ -14,7 +14,7 @@ import { errorHandler, notFound } from "./middlewares/errorHandle";
 import { verifyRecaptchaHook } from "./middlewares/captcha";
 
 import api from "./api";
-import { inProd, maxReports } from "./constants";
+import { inProd, inStaging, maxReports } from "./constants";
 import {
   // delRoomId,
   // getRoomId,
@@ -37,7 +37,7 @@ const app = express();
 
 let server;
 
-if (inProd) {
+if (inProd || inStaging) {
   server = http.createServer(app);
 } else {
   server = https.createServer(
