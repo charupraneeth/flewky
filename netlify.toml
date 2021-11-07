@@ -1,0 +1,18 @@
+# Production context:
+# All deploys from the main repository branch
+# will inherit these settings.
+[context.production.environment]
+    VITE_SERVER_URL = "https://www.iamgoing.live"
+
+# Deploy Preview context:
+# All deploys generated from a pull/merge request
+# will inherit these settings.
+[context.deploy-preview.environment]
+    VITE_SERVER_URL = "https://www.dev.iamgoing.live"
+
+# Specific branch context:
+# Deploys from this branch will take these settings
+# and override their current ones.
+[context.dev.environment]
+    VITE_SERVER_URL = "https://www.dev.iamgoing.live"
+
