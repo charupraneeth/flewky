@@ -30,4 +30,10 @@ function handleReport() {
   background: red;
   color: $primary;
 }
+@media screen and (max-width: 640px) {
+  .report-btn {
+    right: unset;
+    left: 10px;
+  }
+}
 </style>
