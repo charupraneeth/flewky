@@ -1,5 +1,10 @@
 <script lang="ts" setup>
 // This starter template is using Vue 3 <script setup> SFCs
+
+import { createToast } from "mosha-vue-toastify";
+
+let offlineTimer: NodeJS.Timer;
+
 // Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
 document.addEventListener("blur", () => {
   document.title = "Flewky - 👋 here";
@@ -7,6 +12,17 @@ document.addEventListener("blur", () => {
 
 document.addEventListener("focus", () => {
   document.title = "Flewky";
+});
+window.addEventListener("offline", () => {
+  console.log("device offline");
+  offlineTimer = setInterval(() => {
+    createToast("seems like your device is offline", { type: "warning" });
+  }, 5000);
+});
+
+window.addEventListener("online", () => {
+  clearInterval(offlineTimer);
+  createToast("back online!!!", { type: "success" });
 });
 </script>
 
