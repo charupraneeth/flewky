@@ -410,8 +410,10 @@ onUnmounted(() => {
       </video>
 
       <LoaderVideo v-if="!remoteVideoLoaded" />
-      <span class="stranger-college">{{ strangerCollege }}</span>
-      <div class="remote-video-wrap">
+      <span class="stranger-college" v-if="remoteVideoLoaded">{{
+        strangerCollege
+      }}</span>
+      <div class="remote-video-wrap" v-show="remoteVideoLoaded">
         <audio :src="audioUrl">this is audio</audio>
         <video
           class="remote-video"
