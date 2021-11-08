@@ -478,6 +478,7 @@ onUnmounted(() => {
     }
   }
   .local-video {
+    cursor: move;
     position: absolute;
     bottom: 15px;
     right: 10px;
@@ -610,6 +611,7 @@ onUnmounted(() => {
   }
   .local-video {
     width: 100px;
+    min-width: 100px;
   }
 }
 </style>
