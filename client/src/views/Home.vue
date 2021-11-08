@@ -249,18 +249,6 @@ section {
   }
   .headline {
     margin: 3rem 0;
-    h1 {
-      text-align: center;
-    }
-  }
-  .call-to-action__buttons {
-    text-align: center;
-    & > * {
-      text-align: center;
-    }
-  }
-  .call-to-action__label {
-    text-align: center;
   }
 }
 </style>
