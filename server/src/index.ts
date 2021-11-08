@@ -14,7 +14,7 @@ import { errorHandler, notFound } from "./middlewares/errorHandle";
 import { verifyRecaptchaHook } from "./middlewares/captcha";
 
 import api from "./api";
-import { inProd, inStaging, maxReports } from "./constants";
+import { corsWhitelist, inProd, inStaging, maxReports } from "./constants";
 import {
   // delRoomId,
   // getRoomId,
@@ -50,7 +50,7 @@ if (inProd || inStaging) {
 }
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: corsWhitelist,
   },
 });
 
@@ -260,10 +260,14 @@ io.on("connection", (socket) => {
   });
 });
 
+const corsOptions = {
+  origin: corsWhitelist,
+};
+
 app.set("trust proxy", 1);
 app.use(helmet());
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 app.use("/api/v1", api);
 app.use(notFound);

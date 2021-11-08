@@ -10,4 +10,14 @@ export const expiry = 60 * 2; // 2 mintues
 
 export const maxReports = 6;
 
+export const corsWhitelist =
+  inProd || inStaging
+    ? [
+        "https://flewky.com",
+        "https://www.flewky.com",
+        "https://dev.flewky.com",
+        "https://dev.flewky.com",
+      ]
+    : "*";
+
 export const queueName = inProd && !inStaging ? "unmatched" : "dev:unmatched";

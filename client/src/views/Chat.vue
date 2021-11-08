@@ -612,8 +612,9 @@ onUnmounted(() => {
     min-width: 95%;
   }
   .local-video {
-    width: 100px;
+    width: max-content;
     min-width: 100px;
+    max-width: 100px !important;
   }
 }
 </style>
