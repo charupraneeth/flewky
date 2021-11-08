@@ -74,7 +74,12 @@ async function matchUser(socket: Socket) {
 
   const unmatchedSocket = await io.in(unmatchedUserId).fetchSockets();
 
-  const { reports: unmatchedSocketReports = null } = unmatchedSocket[0]?.data;
+  if (!unmatchedSocket || !unmatchedSocket.length) {
+    await setUnmatchedUsers(socket.id);
+    return;
+  }
+
+  const unmatchedSocketReports = unmatchedSocket[0]?.data?.reports;
   unmatchedSocketReports &&
     console.log("reports un match ", unmatchedSocketReports);
   if (
