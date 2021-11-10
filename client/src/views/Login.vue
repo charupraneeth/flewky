@@ -191,6 +191,11 @@ onMounted(() => {
         <div class="vcode-form" v-else>
           <div class="vcode-wrap">
             <label for="email">Enter you verification code below</label>
+            <br />
+            <small
+              >Mail not found? please check the promotions and spam
+              section</small
+            >
             <input
               v-model="verificationCode"
               class="code"
