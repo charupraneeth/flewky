@@ -6,13 +6,7 @@ import { createToast } from "mosha-vue-toastify";
 // import the styling for the toast
 import "mosha-vue-toastify/dist/style.css";
 
-import {
-  onMounted,
-  onUnmounted,
-  ref,
-  watch,
-  watchEffect,
-} from "@vue/runtime-core";
+import { onMounted, onUnmounted, ref, watchEffect } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { Message, Positions } from "../@types";
 import gState from "../store";
@@ -43,7 +37,6 @@ let remoteVideoTimer = null as any;
 const localVideoEl = ref<HTMLVideoElement>(null as any);
 const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
-let debounceTimeout: ReturnType<typeof setTimeout>;
 // let isTypingTimeout: ReturnType<typeof setTimeout>;
 
 const positions: Positions = {
@@ -132,8 +125,6 @@ async function handleSend() {
   }
 
   if (datachannel?.readyState == "open") {
-    console.log("sneding");
-
     datachannel.send(message.value);
     messages.value.push({ content: message.value, isAuthor: true });
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -144,11 +135,9 @@ async function handleSend() {
   }
   console.log("sending ", message.value);
 
-  // gState.IO.emit("message", message.value);
-  // gState.IO.emit("typing", false);
-
   message.value = "";
 }
+
 async function handleEndCall() {
   gState.IO.emit("endCall");
   await init();
@@ -232,19 +221,6 @@ async function handleMatchSuccess(chatMetaData: any) {
   }
 }
 
-watch(
-  () => message.value,
-  () => {
-    console.log("mesage changed");
-    if (!message.value || !message.value.trim()) return;
-    clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => {
-      gState.IO.emit && gState.IO.emit("typing", true);
-      console.log("typiing emitted");
-    }, 250);
-  }
-  // { immediate: true }
-);
 const configuration = {
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },

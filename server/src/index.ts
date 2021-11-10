@@ -177,14 +177,6 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("newMessage", message);
   });
 
-  socket.on("typing", async (isTyping: boolean) => {
-    const { roomId } = socket.data as SocketData;
-    if (!roomId) return;
-    if (isTyping === true || isTyping === false) {
-      socket.to(roomId).emit("typing", isTyping);
-    }
-  });
-
   socket.on("offer", async (data) => {
     const { roomId } = socket.data as SocketData;
     // console.log("offer data", data);
