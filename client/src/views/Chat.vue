@@ -123,8 +123,8 @@ async function handleSend() {
   if (!message.value || !message.value.trim()) return;
   console.log(message.value.length);
 
-  if (message.value.length > 128) {
-    createToast("message can have a max 128 of characters only", {
+  if (message.value.length > 256) {
+    createToast("message can have a max 256 of characters only", {
       type: "warning",
     });
     message.value = "";
