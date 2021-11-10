@@ -5,7 +5,8 @@ import { useRouter } from "vue-router";
 import gState from "../store/index";
 import { createToast } from "mosha-vue-toastify";
 import "mosha-vue-toastify/dist/style.css";
-import { useRecaptcha, VueRecaptcha } from "vue3-recaptcha-v2";
+// @ts-ignore next-line
+import VueHcaptcha from "@hcaptcha/vue3-hcaptcha";
 
 import Loader from "../components/Loader.vue";
 import { Jiglag } from "../@types";
@@ -18,25 +19,27 @@ const captchaToken = ref("");
 
 const isGoDisabled = ref(false);
 
-const { resetRecaptcha } = useRecaptcha();
-const recaptchaWidget = ref(null);
+// const recaptchaWidget = ref(null);
+const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 
-const callbackVerify = (response: any) => {
-  console.log("token ", response);
-  captchaToken.value = response;
-};
-const callbackExpired = () => {
+function handleCapchaVerify(token: string, ekey: string) {
+  console.log("token ", token);
+  console.log("ekey ", ekey);
+  captchaToken.value = token;
+}
+const handleCaptchaExpiry = () => {
   console.log("expired!");
   captchaToken.value = "";
 };
-const callbackFail = () => {
+const handleCaptchaError = () => {
   console.log("fail");
   captchaToken.value = "";
 };
 // Reset Recaptcha action
-const actionReset = () => {
-  resetRecaptcha(recaptchaWidget.value as any);
-};
+// const actionReset = () => {
+//   // @ts-ignore next-line
+//   hcaptcha.reset(hcaptchaWidget.value as any);
+// };
 
 function handleSignout() {
   gState.IO.disconnect && gState.IO.disconnect();
@@ -91,7 +94,7 @@ function handleConnect() {
     createToast(error.message || "failed to connect socket", {
       type: "warning",
     });
-    actionReset();
+    // actionReset();
     gState.IO.disconnect && gState.IO.disconnect();
   }
 }
@@ -136,15 +139,12 @@ onMounted(() => {
           <h3 class="call-to-action__label">Click below</h3>
 
           <div class="call-to-action__buttons">
-            <vue-recaptcha
-              theme="light"
-              size="normal"
-              :tabindex="0"
-              @widgetId="recaptchaWidget = $event"
-              @verify="callbackVerify($event)"
-              @expired="callbackExpired()"
-              @fail="callbackFail()"
-            />
+            <vue-hcaptcha
+              :sitekey="hcaptchaSiteKey"
+              @error="handleCaptchaError"
+              @verify="handleCapchaVerify"
+              @expired="handleCaptchaExpiry"
+            ></vue-hcaptcha>
             <button
               class="btn call-to-action__button btn-secondary"
               @click="handleConnect"
@@ -153,12 +153,6 @@ onMounted(() => {
             >
               go
             </button>
-            <!-- <button
-              class="btn call-to-action__button btn-primary"
-              @click="handleConnect"
-            >
-              Text
-            </button> -->
           </div>
         </div>
       </div>

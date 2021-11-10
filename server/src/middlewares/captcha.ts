@@ -17,13 +17,13 @@ async function verifyRecaptchaHook(
   next: NextFunction | any
 ) {
   const details = {
-    secret: process.env.RECAPTCHA_SECRET_KEY,
+    secret: process.env.HCAPTCHA_SECRET_KEY,
     response: captchaToken,
   };
   try {
     const { data } = await axios({
       method: "POST",
-      url: "https://www.google.com/recaptcha/api/siteverify",
+      url: "https://hcaptcha.com/siteverify",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         accept: "application/json",
@@ -41,6 +41,7 @@ async function verifyRecaptchaHook(
     }
     next();
   } catch (error) {
+    console.log(error);
     next(error);
   }
 }
