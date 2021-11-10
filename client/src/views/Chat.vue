@@ -19,7 +19,7 @@ import gState from "../store";
 import Report from "../components/Report.vue";
 // import { iceConfig } from "../consts";
 const audioUrl = new URL("../assets/success.mp3", import.meta.url).href;
-console.log(audioUrl);
+// console.log(audioUrl);
 
 const router = useRouter();
 const isMatched = ref<Boolean>(false);
@@ -29,12 +29,14 @@ const messagesContainer = ref<HTMLDivElement>(null!);
 const messages = ref<Message[]>([]);
 const strangerCollege = ref("");
 
+const isDataChannelOpen = ref(false);
 const remoteVideoLoaded = ref(false);
 
 let localStream: MediaStream;
 let remoteStream: MediaStream = new MediaStream();
 
 let pc: RTCPeerConnection;
+let datachannel: RTCDataChannel | null;
 
 let remoteVideoTimer = null as any;
 
@@ -42,7 +44,7 @@ const localVideoEl = ref<HTMLVideoElement>(null as any);
 const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
 let debounceTimeout: ReturnType<typeof setTimeout>;
-let isTypingTimeout: ReturnType<typeof setTimeout>;
+// let isTypingTimeout: ReturnType<typeof setTimeout>;
 
 const positions: Positions = {
   clientX: undefined,
@@ -93,6 +95,29 @@ async function handleRemoteVideoLoad() {
   // await document.querySelector("audio")?.play();
   remoteVideoLoaded.value = true;
 }
+function handleChannelOpen() {
+  console.log("channel open");
+  isDataChannelOpen.value = true;
+}
+function handleChannelClose() {
+  console.log("channel close");
+}
+function handleChannelError() {
+  console.log("channel error");
+  createToast("error in data channel", { type: "warning" });
+  isDataChannelOpen.value = false;
+}
+
+async function handleNewMessage(messageEvent: MessageEvent) {
+  console.log("message evnet ", messageEvent);
+
+  const newMessage = messageEvent.data;
+  console.log("msg recieved", newMessage);
+  isStrangerTyping.value = false;
+  messages.value.push({ content: newMessage, isAuthor: false });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+}
 
 async function handleSend() {
   if (!message.value || !message.value.trim()) return;
@@ -105,14 +130,23 @@ async function handleSend() {
     message.value = "";
     return;
   }
-  // console.log("sending ", message.value);
 
-  gState.IO.emit("message", message.value);
-  gState.IO.emit("typing", false);
+  if (datachannel?.readyState == "open") {
+    console.log("sneding");
 
-  messages.value.push({ content: message.value, isAuthor: true });
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+    datachannel.send(message.value);
+    messages.value.push({ content: message.value, isAuthor: true });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  } else {
+    console.log("channel not found");
+    createToast("channel not found", { type: "warning" });
+  }
+  console.log("sending ", message.value);
+
+  // gState.IO.emit("message", message.value);
+  // gState.IO.emit("typing", false);
+
   message.value = "";
 }
 async function handleEndCall() {
@@ -128,7 +162,7 @@ async function handleIceCandidate(event: RTCPeerConnectionIceEvent) {
 }
 
 async function handleIceStateChange(event: Event) {
-  console.log("ICE state change event: ", event);
+  // console.log("ICE state change event: ", event);
 }
 
 function handleConnectionStateChange() {
@@ -144,7 +178,7 @@ function handleConnectionStateChange() {
 }
 async function handleRemoteTrack(event: RTCTrackEvent) {
   console.log("pc2 received remote stream");
-  console.log(event);
+  // console.log(event);
   remoteStream = event.streams[0];
   remoteVideoEl.value.srcObject = remoteStream;
   // await remoteVideoEl.value.play();
@@ -160,7 +194,7 @@ async function handleMatchSuccess(chatMetaData: any) {
         console.log("remote video loaded");
       }
     }, 20000);
-    console.log("metadata ", chatMetaData);
+    // console.log("metadata ", chatMetaData);
 
     isMatched.value = true;
     strangerCollege.value = chatMetaData?.strangerCollege;
@@ -169,15 +203,29 @@ async function handleMatchSuccess(chatMetaData: any) {
     pc.addEventListener("connectionstatechange", handleConnectionStateChange);
     pc.addEventListener("track", handleRemoteTrack);
     if (chatMetaData.isHost) {
+      datachannel = pc.createDataChannel("textChannel");
+      datachannel.addEventListener("open", handleChannelOpen);
+      datachannel.addEventListener("close", handleChannelClose);
+      datachannel.addEventListener("error", handleChannelError);
+      datachannel.addEventListener("message", handleNewMessage);
       const offer = await pc.createOffer({
         offerToReceiveAudio: true,
         offerToReceiveVideo: true,
       });
       // console.log(offer);
       await pc.setLocalDescription(offer);
-      console.log("offer set as LD");
+      // console.log("offer set as LD");
       gState.IO.emit("offer", offer);
+    } else {
+      pc.addEventListener("datachannel", (channelEvent) => {
+        datachannel = channelEvent.channel;
+        datachannel.addEventListener("open", handleChannelOpen);
+        datachannel.addEventListener("close", handleChannelClose);
+        datachannel.addEventListener("error", handleChannelError);
+        datachannel.addEventListener("message", handleNewMessage);
+      });
     }
+
     // createToast("trying to send the offer", { type: "info" });
   } catch (error) {
     createToast("failed to send the offer", { type: "danger" });
@@ -225,6 +273,9 @@ async function init() {
     pc.removeEventListener("track", handleRemoteTrack);
     pc.close();
   }
+  datachannel = null;
+  isDataChannelOpen.value = false;
+
   clearInterval(remoteVideoTimer);
   console.log("is matched ", isMatched.value);
   isMatched.value = false;
@@ -265,20 +316,20 @@ async function init() {
   gState.IO.on("matchSuccess", (chatMetaData: any) => {
     handleMatchSuccess(chatMetaData);
   });
-  gState.IO.on("newMessage", async (newMessage: string) => {
-    console.log("msg recieved", newMessage);
-    isStrangerTyping.value = false;
-    messages.value.push({ content: newMessage, isAuthor: false });
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-  });
-  gState.IO.on("typing", (typingState: boolean) => {
-    isStrangerTyping.value = typingState;
-    clearTimeout(isTypingTimeout);
-    isTypingTimeout = setTimeout(() => {
-      isStrangerTyping.value = false;
-    }, 800);
-  });
+  // gState.IO.on("newMessage", async (newMessage: string) => {
+  //   console.log("msg recieved", newMessage);
+  //   isStrangerTyping.value = false;
+  //   messages.value.push({ content: newMessage, isAuthor: false });
+  //   await new Promise((resolve) => setTimeout(resolve, 100));
+  //   messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  // });
+  // gState.IO.on("typing", (typingState: boolean) => {
+  //   isStrangerTyping.value = typingState;
+  //   clearTimeout(isTypingTimeout);
+  //   isTypingTimeout = setTimeout(() => {
+  //     isStrangerTyping.value = false;
+  //   }, 800);
+  // });
   gState.IO.on("newAnswer", async (newOffer: RTCSessionDescriptionInit) => {
     try {
       console.log("got new answer");
@@ -393,7 +444,7 @@ onUnmounted(() => {
         <typing-placeholder v-if="isStrangerTyping" />
       </div>
 
-      <div class="message-input">
+      <div class="message-input" :disabled="isDataChannelOpen">
         <span class="phone-icon" @click="handleEndCall">
           <i class="fa fa-phone" aria-hidden="true"></i>
         </span>
