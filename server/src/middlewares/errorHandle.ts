@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { inProd, inStaging } from "../constants";
 
 function notFound(req: Request, res: Response, next: NextFunction) {
   res.status(404);
@@ -19,7 +20,7 @@ function errorHandler(
   res.json({
     message: "failed",
     error: err.message || "internal server error",
-    stack: process.env.NODE_ENV === "production" ? "🥞" : err.stack,
+    stack: inProd || inStaging ? "🥞" : err.stack,
   });
 }
 
