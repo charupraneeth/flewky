@@ -22,14 +22,52 @@ const captchaToken = ref("");
 const hcaptchaWidget = ref<HTMLDivElement>();
 const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 
-function handleCapchaVerify(token: string, ekey: string) {
+async function handleCapchaVerify(token: string, ekey: string) {
   console.log("token ", token);
   console.log("ekey ", ekey);
   captchaToken.value = token;
+  try {
+    loading.value = true;
+    const response = await fetch(
+      `${import.meta.env.VITE_SERVER_URL}/api/v1/login`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: emailInput.value,
+          captchaToken: captchaToken.value,
+        }),
+      }
+    );
+
+    const json = await response.json();
+    console.log(json);
+    if (!response.ok) {
+      throw new Error(json.error || "bad response");
+    }
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+    if (json.message !== "success") {
+      throw new Error();
+    }
+    createToast("sucessfully sent email", { type: "info" });
+    isMailSent.value = true;
+    loading.value = false;
+  } catch (error: Error | any) {
+    loading.value = false;
+    console.error(error);
+    createToast(error.message || "failed to verify email");
+    resetCaptcha();
+  }
 }
 const handleCaptchaExpiry = () => {
   console.log("expired!");
   captchaToken.value = "";
+  resetCaptcha();
 };
 const handleCaptchaError = () => {
   console.log("fail");
@@ -41,6 +79,10 @@ function handleCaptchaRender() {
 }
 // Reset Recaptcha action
 
+function resetCaptcha() {
+  // @ts-ignore next-line
+  hcaptchaWidget.value?.reset();
+}
 async function verifyCode() {
   try {
     if (!verificationCode.value || !verificationCode.value.trim()) {
@@ -90,55 +132,21 @@ async function verifyCode() {
 }
 
 async function verifyEmail() {
-  try {
-    if (!emailInput.value || !emailInput.value.trim()) {
-      createToast("invalid email", { type: "warning" });
-      return;
-    }
-    const { valid } = ismail(emailInput.value);
-    if (!valid) {
-      createToast("invalid email", { type: "warning" });
-      return;
-    }
-    if (!isCollegeMail(emailInput.value)) {
-      createToast("invalid college email", { type: "warning" });
-      return;
-    }
-    loading.value = true;
-    const response = await fetch(
-      `${import.meta.env.VITE_SERVER_URL}/api/v1/login`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: emailInput.value,
-          captchaToken: captchaToken.value,
-        }),
-      }
-    );
-
-    const json = await response.json();
-    console.log(json);
-    if (!response.ok) {
-      throw new Error(json.error || "bad response");
-    }
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-    if (json.message !== "success") {
-      throw new Error();
-    }
-    createToast("sucessfully sent email", { type: "info" });
-    isMailSent.value = true;
-    loading.value = false;
-  } catch (error: Error | any) {
-    loading.value = false;
-    console.error(error);
-    createToast(error.message || "failed to verify email");
+  if (!emailInput.value || !emailInput.value.trim()) {
+    createToast("invalid email", { type: "warning" });
+    return;
   }
+  const { valid } = ismail(emailInput.value);
+  if (!valid) {
+    createToast("invalid email", { type: "warning" });
+    return;
+  }
+  if (!isCollegeMail(emailInput.value)) {
+    createToast("invalid college email", { type: "warning" });
+    return;
+  }
+  // @ts-ignore next-line
+  hcaptchaWidget.value.execute();
 }
 onMounted(() => {
   const jiglag = localStorage.getItem("jiglag");
@@ -175,18 +183,15 @@ onMounted(() => {
           <div>
             <vue-hcaptcha
               ref="hcaptchaWidget"
+              size="invisible"
               :sitekey="hcaptchaSiteKey"
               @error="handleCaptchaError"
               @verify="handleCapchaVerify"
               @expired="handleCaptchaExpiry"
               @rendered="handleCaptchaRender"
+              @challenge-expired="handleCaptchaExpiry"
             ></vue-hcaptcha>
-            <button
-              class="btn-secondary"
-              type="submit"
-              @click="verifyEmail"
-              v-if="captchaToken"
-            >
+            <button class="btn-secondary" type="submit" @click="verifyEmail">
               verify email
             </button>
           </div>
