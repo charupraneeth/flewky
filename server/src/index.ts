@@ -150,13 +150,13 @@ io.use(async (socket, next) => {
   }
 });
 
-io.use(async (socket, next) => {
-  const captchaToken = socket.handshake.auth.captchaToken;
-  if (!captchaToken) {
-    next(new Error("invalid captcha token"));
-  }
-  verifyRecaptchaHook(captchaToken, next);
-});
+// io.use(async (socket, next) => {
+//   const captchaToken = socket.handshake.auth.captchaToken;
+//   if (!captchaToken) {
+//     next(new Error("invalid captcha token"));
+//   }
+//   verifyRecaptchaHook(captchaToken, next);
+// });
 
 io.on("connection", (socket) => {
   console.log(`socketd connected `, socket.id);

@@ -5,8 +5,6 @@ import { useRouter } from "vue-router";
 import gState from "../store/index";
 import { createToast } from "mosha-vue-toastify";
 import "mosha-vue-toastify/dist/style.css";
-// @ts-ignore next-line
-import VueHcaptcha from "@hcaptcha/vue3-hcaptcha";
 
 import Loader from "../components/Loader.vue";
 import { Jiglag } from "../@types";
@@ -15,23 +13,27 @@ import Footer from "../components/Footer.vue";
 const router = useRouter();
 const loading = ref(true);
 const token = ref("");
-const captchaToken = ref("");
 
 const isGoDisabled = ref(false);
 
-const hcaptchaWidget = ref(null);
-const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
+function handleSignout() {
+  gState.IO.disconnect && gState.IO.disconnect();
+  localStorage.clear();
+  createToast("signed out", { type: "info" });
+  router.push("/login");
+}
 
-function handleCapchaVerify(ctoken: string, ekey: string) {
-  console.log("token ", ctoken);
-  console.log("ekey ", ekey);
-  captchaToken.value = ctoken;
+function handleConnect() {
+  isGoDisabled.value = true;
+  if (!token.value) {
+    router.push("/login");
+  }
+
   try {
     const ioObject: Socket = io(import.meta.env.VITE_SERVER_URL, {
       transports: ["websocket"],
       auth: {
         token: token.value,
-        captchaToken: captchaToken.value,
       },
     });
     gState.IO = ioObject;
@@ -70,38 +72,6 @@ function handleCapchaVerify(ctoken: string, ekey: string) {
     // actionReset();
     gState.IO.disconnect && gState.IO.disconnect();
   }
-}
-const handleCaptchaExpiry = () => {
-  console.log("expired!");
-  captchaToken.value = "";
-  createToast("captcha expired", { type: "warning" });
-  resetCaptcha();
-};
-const handleCaptchaError = () => {
-  console.log("fail");
-  captchaToken.value = "";
-  createToast("captcha expired", { type: "warning" });
-};
-// Reset Recaptcha action
-const resetCaptcha = () => {
-  // @ts-ignore next-line
-  hcaptchaWidget.value.reset();
-};
-
-function handleSignout() {
-  gState.IO.disconnect && gState.IO.disconnect();
-  localStorage.clear();
-  createToast("signed out", { type: "info" });
-  router.push("/login");
-}
-
-function handleConnect() {
-  isGoDisabled.value = true;
-  if (!token.value) {
-    router.push("/login");
-  }
-  // @ts-ignore next-line
-  hcaptchaWidget.value.execute();
 }
 
 onMounted(() => {
@@ -144,15 +114,6 @@ onMounted(() => {
           <h3 class="call-to-action__label">Click below</h3>
 
           <div class="call-to-action__buttons">
-            <vue-hcaptcha
-              ref="hcaptchaWidget"
-              :sitekey="hcaptchaSiteKey"
-              size="invisible"
-              @error="handleCaptchaError"
-              @verify="handleCapchaVerify"
-              @expired="handleCaptchaExpiry"
-              @challenge-expired="handleCaptchaExpiry"
-            ></vue-hcaptcha>
             <button
               class="btn call-to-action__button btn-secondary"
               @click="handleConnect"
