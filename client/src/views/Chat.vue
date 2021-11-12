@@ -11,6 +11,7 @@ import { useRouter } from "vue-router";
 import { Message, Positions } from "../@types";
 import gState from "../store";
 import Report from "../components/Report.vue";
+import { config } from "process";
 // import { iceConfig } from "../consts";
 const audioUrl = new URL("../assets/success.mp3", import.meta.url).href;
 // console.log(audioUrl);
@@ -379,10 +380,15 @@ onMounted(async () => {
     router.push("/");
     return;
   }
+  gState.IO.once("iceServers", ({ iceServers }) => {
+    if (iceServers) {
+      configuration.iceServers = iceServers;
+    }
+    console.log("recieved ice servers ", iceServers);
 
+    init();
+  });
   console.log("not matched");
-
-  init();
 });
 
 onUnmounted(() => {

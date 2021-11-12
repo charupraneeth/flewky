@@ -28,12 +28,19 @@ import {
 import { getCollege, isCollegeMail } from "./utils/validateMail";
 import { SocketData } from "./@types";
 import { rlSocketClient } from "./middlewares/rateLimit";
+import { Twilio } from "twilio";
 
 config({ path: path.join(__dirname, "../.env") });
 
 const port = process.env.PORT || 1337;
 
 const app = express();
+
+const twilioClient = new Twilio(
+  // @ts-ignore next-line
+  process.env.TWILIO_SID,
+  process.env.TWILIO_TOKEN
+);
 
 let server;
 
@@ -141,6 +148,8 @@ io.use(async (socket, next) => {
           socket.data.college = getCollege(email);
           socket.data.email = email;
           socket.data.reports = reports ? parseInt(reports) : 0;
+          // const token = await twilioClient.tokens.create();
+
           next();
         }
       }
@@ -160,9 +169,17 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
   console.log(`socketd connected `, socket.id);
-
+  twilioClient.tokens
+    .create({ ttl: 3600 + 120 })
+    .then((token) => {
+      console.log(token);
+      io.to(socket.id).emit("iceServers", { iceServers: token.iceServers });
+    })
+    .catch((err) => {
+      console.log(err);
+      io.to(socket.id).emit("iceServers", { iceServers: null });
+    });
   io.sockets.allSockets().then((data) => console.log(data.size));
-
   socket.on("connectNewUser", async () => {
     const { roomId } = socket.data as SocketData;
     if (roomId) {
