@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Loader from "../components/Loader.vue";
 import LoaderVideo from "../components/LoaderVideo.vue";
-import TypingPlaceholder from "../components/TypingPlaceholder.vue";
+// import TypingPlaceholder from "../components/TypingPlaceholder.vue";
 import { createToast } from "mosha-vue-toastify";
 // import the styling for the toast
 import "mosha-vue-toastify/dist/style.css";
@@ -11,7 +11,6 @@ import { useRouter } from "vue-router";
 import { Message, Positions } from "../@types";
 import gState from "../store";
 import Report from "../components/Report.vue";
-import { config } from "process";
 // import { iceConfig } from "../consts";
 const audioUrl = new URL("../assets/success.mp3", import.meta.url).href;
 // console.log(audioUrl);
@@ -38,6 +37,28 @@ let remoteVideoTimer = null as any;
 const localVideoEl = ref<HTMLVideoElement>(null as any);
 const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
+const isMobile = ref(document.documentElement.clientWidth < 760);
+const isVideoHovered = ref(false);
+
+const messagesContainerWidth = ref(0);
+
+function toggleMessages() {
+  const prevValue = messagesContainerWidth.value;
+  if (prevValue) {
+    messagesContainerWidth.value = 0;
+    return;
+  }
+  if (isMobile.value) {
+    messagesContainerWidth.value = 100;
+    return;
+  }
+  messagesContainerWidth.value = 35;
+}
+
+function handleResize() {
+  isMobile.value = document.documentElement.clientWidth < 760;
+}
+
 // let isTypingTimeout: ReturnType<typeof setTimeout>;
 
 const positions: Positions = {
@@ -46,44 +67,6 @@ const positions: Positions = {
   movementX: 0,
   movementY: 0,
 };
-
-function elementDrag(event: MouseEvent) {
-  event.preventDefault();
-  if (!positions.clientX || !positions.clientY) return;
-  positions.movementX = positions.clientX - event.clientX;
-  positions.movementY = positions.clientY - event.clientY;
-  positions.clientX = event.clientX;
-  positions.clientY = event.clientY;
-  // set the element's new position:
-  // console.log(
-  //   localVideoEl.value.offsetLeft - positions.movementX,
-  //   localVideoEl.value.offsetTop - positions.movementY
-  // );
-  const top = localVideoEl.value.offsetTop - positions.movementY;
-  const left = localVideoEl.value.offsetLeft - positions.movementX;
-  const parent = localVideoEl.value.parentElement;
-  if (!parent) return;
-  if (top < 5 || top > parent?.offsetHeight - localVideoEl.value.offsetHeight)
-    return;
-  if (left < 5 || left > parent?.offsetWidth - localVideoEl.value.offsetWidth)
-    return;
-  localVideoEl.value.style.top = top + "px";
-  localVideoEl.value.style.left = left + "px";
-}
-
-function closeDragElement() {
-  document.onmouseup = null;
-  document.onmousemove = null;
-}
-
-function dragMouseDown(event: MouseEvent) {
-  event.preventDefault();
-  // get the mouse cursor position at startup:
-  positions.clientX = event.clientX;
-  positions.clientY = event.clientY;
-  document.onmousemove = elementDrag;
-  document.onmouseup = closeDragElement;
-}
 
 async function handleRemoteVideoLoad() {
   // await document.querySelector("audio")?.play();
@@ -380,6 +363,7 @@ onMounted(async () => {
     router.push("/");
     return;
   }
+  window.addEventListener("resize", handleResize);
   gState.IO.once("iceServers", ({ iceServers }) => {
     if (iceServers) {
       configuration.iceServers = iceServers;
@@ -399,6 +383,7 @@ onUnmounted(() => {
   }
   if (pc) pc.close();
   gState.IO.disconnect && gState.IO.disconnect();
+  window.removeEventListener("resize", handleResize);
   console.log("this con");
 });
 </script>
@@ -407,9 +392,15 @@ onUnmounted(() => {
     <Loader /><small>trying to find you the right person...</small>
   </section>
   <section class="section-chat-dashboard" v-else>
-    <Report v-if="remoteVideoLoaded" />
-    <div class="section-messages">
+    <!-- <Report v-if="remoteVideoLoaded" /> -->
+    <div
+      class="section-messages"
+      :style="{ width: `${messagesContainerWidth}%` }"
+    >
       <div class="messages-container" ref="messagesContainer">
+        <span class="back-btn" @click="toggleMessages"
+          ><i class="fas fa-arrow-left"></i
+        ></span>
         <p class="message-placeholder" v-if="!messages.length">
           You're now chatting with a random stranger
         </p>
@@ -423,13 +414,10 @@ onUnmounted(() => {
             {{ message.content }}
           </div>
         </div>
-        <typing-placeholder v-if="isStrangerTyping" />
+        <!-- <typing-placeholder v-if="isStrangerTyping" /> -->
       </div>
 
       <div class="message-input" :disabled="isDataChannelOpen">
-        <span class="phone-icon" @click="handleEndCall">
-          <i class="fa fa-phone" aria-hidden="true"></i>
-        </span>
         <input
           type="text"
           v-model="message"
@@ -439,27 +427,27 @@ onUnmounted(() => {
         <span class="send-arrow" @click="handleSend"
           ><i class="far fa-paper-plane"></i
         ></span>
-        <!-- <button @click="handleSend">send</button> -->
       </div>
     </div>
 
-    <div class="section-video">
-      <video
-        class="local-video"
-        ref="localVideoEl"
-        muted
-        autoplay
-        playsinline
-        @mousedown="dragMouseDown"
-      >
+    <div
+      class="section-video"
+      :style="{ width: `${100 - messagesContainerWidth}%` }"
+    >
+      <video class="local-video" ref="localVideoEl" muted autoplay playsinline>
         waiting for your video
       </video>
 
       <LoaderVideo v-if="!remoteVideoLoaded" />
-      <span class="stranger-college" v-if="remoteVideoLoaded">{{
+      <!-- <span class="stranger-college" v-if="remoteVideoLoaded">{{
         strangerCollege
-      }}</span>
-      <div class="remote-video-wrap" v-show="remoteVideoLoaded">
+      }}</span> -->
+      <div
+        class="remote-video-wrap"
+        v-show="remoteVideoLoaded"
+        @mouseover="isVideoHovered = true"
+        @mouseout="isVideoHovered = false"
+      >
         <audio :src="audioUrl">this is audio</audio>
         <video
           class="remote-video"
@@ -468,6 +456,18 @@ onUnmounted(() => {
           playsinline
           @loadeddata="handleRemoteVideoLoad"
         ></video>
+      </div>
+      <div
+        class="menubar"
+        :class="isVideoHovered && 'active'"
+        @mouseover="isVideoHovered = true"
+      >
+        <span class="messages-icon" @click="toggleMessages"
+          ><i class="far fa-comment-dots"></i
+        ></span>
+        <span class="phone-icon" @click="handleEndCall">
+          <i class="fa fa-phone" aria-hidden="true"></i>
+        </span>
       </div>
     </div>
   </section>
@@ -486,6 +486,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   position: relative;
+  // overflow-y: hidden;
 }
 
 .section-video {
@@ -498,30 +499,32 @@ onUnmounted(() => {
   position: relative;
   align-items: center;
   justify-content: center;
-
   .stranger-college {
     display: inline-block;
     text-align: center;
   }
   .remote-video-wrap {
     text-align: center;
-    max-height: 100%;
-    width: 100%;
+
+    // width: 100%;
+    min-width: 430px;
+    max-width: 100%;
+    min-height: 100%;
     position: relative;
-    &::after {
-      content: "flewky";
-      position: absolute;
-      top: 95%;
-      left: 12%;
-      opacity: 0.4;
-    }
+    // &::after {
+    //   content: "flewky";
+    //   position: absolute;
+    //   top: 95%;
+    //   left: 12%;
+    //   opacity: 0.4;
+    // }
 
     // padding: 1rem;
     .remote-video {
-      width: 80%;
+      width: 100%;
       display: inline-block;
       max-width: 100%;
-      height: auto;
+      height: 100%;
       border-radius: 10px;
     }
   }
@@ -536,6 +539,51 @@ onUnmounted(() => {
   }
 }
 
+.menubar {
+  position: absolute;
+  top: 105%;
+  transition: top 0.3s ease;
+  &.active {
+    top: 88%;
+  }
+  & > * {
+    margin: 0 1rem;
+  }
+}
+
+.messages-icon {
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 1rem;
+  margin-right: 0.5rem;
+
+  color: white;
+
+  background: $tertiary;
+}
+.phone-icon {
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 1rem;
+  margin-right: 0.5rem;
+
+  color: white;
+
+  background: red;
+  i {
+    transform: rotate(225deg);
+  }
+  &:active i {
+    transform: rotate(225deg) scale(0.8);
+  }
+}
+
+.back-btn {
+  color: $secondary;
+  font-size: 2rem;
+  margin: 1rem 0 0 1rem;
+  cursor: pointer;
+}
 .section-messages {
   background: $primary;
   width: 700px;
@@ -550,27 +598,12 @@ onUnmounted(() => {
     scrollbar-color: light;
     scrollbar-width: thin;
   }
+
   .message-input {
     margin-bottom: 0.5rem;
     text-align: center;
     display: flex;
     padding: 0.5rem;
-    .phone-icon {
-      cursor: pointer;
-      border-radius: 50%;
-      padding: 1rem;
-      margin-right: 0.5rem;
-
-      color: white;
-
-      background: red;
-      i {
-        transform: rotate(225deg);
-      }
-      &:active i {
-        transform: rotate(225deg) scale(0.8);
-      }
-    }
 
     .send-arrow {
       margin-left: 0.5rem;
@@ -636,23 +669,43 @@ onUnmounted(() => {
 
 @media screen and (max-width: 640px) {
   .section-chat-dashboard {
-    flex-direction: column-reverse;
     .section-messages {
-      max-height: 220px;
+      height: 100%;
       width: 100%;
+
       overflow-y: auto;
       .message-input {
         margin: 1rem 0;
       }
     }
   }
-  .remote-video-wrap::after {
-    content: "flewky";
-    position: absolute;
-    top: 92% !important;
-    left: 6% !important;
-    opacity: 0.4;
+
+  .menubar {
+    top: 90%;
   }
+  // .remote-video-wrap::after {
+  //   content: "flewky";
+  //   position: absolute;
+  //   top: 92% !important;
+  //   left: 6% !important;
+  //   opacity: 0.4;
+  // }
+  .section-video {
+    justify-content: space-evenly;
+    .remote-video-wrap {
+      height: 90%;
+      min-height: 90%;
+    }
+
+    .menubar-mobile {
+      height: 10%;
+      width: 125px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
   .remote-video {
     padding: 0rem;
     min-width: 95%;
