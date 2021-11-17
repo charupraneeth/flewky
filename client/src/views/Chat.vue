@@ -38,7 +38,6 @@ const localVideoEl = ref<HTMLVideoElement>(null as any);
 const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
 const isMobile = ref(document.documentElement.clientWidth < 760);
-const isVideoHovered = ref(false);
 
 const messagesContainerWidth = ref(0);
 
@@ -399,7 +398,7 @@ onUnmounted(() => {
     >
       <div class="messages-container" ref="messagesContainer">
         <span class="back-btn" @click="toggleMessages"
-          ><i class="fas fa-arrow-left"></i
+          ><i class="fas fa-times"></i
         ></span>
         <p class="message-placeholder" v-if="!messages.length">
           You're now chatting with a random stranger
@@ -429,39 +428,39 @@ onUnmounted(() => {
         ></span>
       </div>
     </div>
-
     <div
       class="section-video"
       :style="{ width: `${100 - messagesContainerWidth}%` }"
     >
-      <video class="local-video" ref="localVideoEl" muted autoplay playsinline>
-        waiting for your video
-      </video>
+      <div class="video-wrap">
+        <div class="local-video-wrap">
+          <video
+            class="local-video"
+            ref="localVideoEl"
+            muted
+            autoplay
+            playsinline
+          >
+            waiting for your video
+          </video>
+        </div>
 
-      <LoaderVideo v-if="!remoteVideoLoaded" />
-      <!-- <span class="stranger-college" v-if="remoteVideoLoaded">{{
+        <LoaderVideo v-if="!remoteVideoLoaded" />
+        <!-- <span class="stranger-college" v-if="remoteVideoLoaded">{{
         strangerCollege
       }}</span> -->
-      <div
-        class="remote-video-wrap"
-        v-show="remoteVideoLoaded"
-        @mouseover="isVideoHovered = true"
-        @mouseout="isVideoHovered = false"
-      >
-        <audio :src="audioUrl">this is audio</audio>
-        <video
-          class="remote-video"
-          ref="remoteVideoEl"
-          autoplay
-          playsinline
-          @loadeddata="handleRemoteVideoLoad"
-        ></video>
+        <div class="remote-video-wrap" v-show="remoteVideoLoaded">
+          <audio :src="audioUrl">this is audio</audio>
+          <video
+            class="remote-video"
+            ref="remoteVideoEl"
+            autoplay
+            playsinline
+            @loadeddata="handleRemoteVideoLoad"
+          ></video>
+        </div>
       </div>
-      <div
-        class="menubar"
-        :class="isVideoHovered && 'active'"
-        @mouseover="isVideoHovered = true"
-      >
+      <div class="menubar">
         <span class="messages-icon" @click="toggleMessages"
           ><i class="far fa-comment-dots"></i
         ></span>
@@ -494,11 +493,15 @@ onUnmounted(() => {
   overflow-y: hidden;
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  align-items: center;
-  justify-content: center;
+  .video-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-height: 90%;
+    height: 100%;
+  }
   .stranger-college {
     display: inline-block;
     text-align: center;
@@ -506,11 +509,11 @@ onUnmounted(() => {
   .remote-video-wrap {
     text-align: center;
 
-    // width: 100%;
+    width: 100%;
     min-width: 430px;
     max-width: 100%;
-    min-height: 100%;
-    position: relative;
+
+    height: 100%;
     // &::after {
     //   content: "flewky";
     //   position: absolute;
@@ -528,24 +531,26 @@ onUnmounted(() => {
       border-radius: 10px;
     }
   }
-  .local-video {
-    cursor: move;
+  .local-video-wrap {
+    // cursor: move;
     position: absolute;
     bottom: 15px;
     right: 10px;
     z-index: 1;
     max-width: 150px;
-    border-radius: 10px;
+    .local-video {
+      border-radius: 10px;
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 
 .menubar {
-  position: absolute;
-  top: 105%;
-  transition: top 0.3s ease;
-  &.active {
-    top: 88%;
-  }
+  display: flex;
+  height: 10%;
+  justify-content: center;
+  align-items: center;
   & > * {
     margin: 0 1rem;
   }
@@ -555,7 +560,6 @@ onUnmounted(() => {
   cursor: pointer;
   border-radius: 50%;
   padding: 1rem;
-  margin-right: 0.5rem;
 
   color: white;
 
@@ -565,8 +569,6 @@ onUnmounted(() => {
   cursor: pointer;
   border-radius: 50%;
   padding: 1rem;
-  margin-right: 0.5rem;
-
   color: white;
 
   background: red;
@@ -680,9 +682,6 @@ onUnmounted(() => {
     }
   }
 
-  .menubar {
-    top: 90%;
-  }
   // .remote-video-wrap::after {
   //   content: "flewky";
   //   position: absolute;
@@ -693,27 +692,24 @@ onUnmounted(() => {
   .section-video {
     justify-content: space-evenly;
     .remote-video-wrap {
-      height: 90%;
+      height: 100%;
       min-height: 90%;
-    }
-
-    .menubar-mobile {
-      height: 10%;
-      width: 125px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
   }
 
   .remote-video {
     padding: 0rem;
     min-width: 95%;
+    height: min-content;
   }
-  .local-video {
+  .local-video-wrap {
     width: max-content;
     min-width: 100px;
     max-width: 100px !important;
+
+    .local-video {
+      min-width: 100px;
+    }
   }
 }
 </style>
