@@ -239,6 +239,7 @@ async function init() {
   datachannel = null;
   isDataChannelOpen.value = false;
 
+  messagesContainerWidth.value = 0;
   isUnseenMessages.value = false;
 
   clearInterval(remoteVideoTimer);
@@ -452,9 +453,7 @@ onUnmounted(() => {
         </div>
 
         <LoaderVideo v-if="!remoteVideoLoaded" />
-        <!-- <span class="stranger-college" v-if="remoteVideoLoaded">{{
-        strangerCollege
-      }}</span> -->
+
         <div class="remote-video-wrap" v-show="remoteVideoLoaded">
           <audio :src="audioUrl">this is audio</audio>
           <video
@@ -468,13 +467,20 @@ onUnmounted(() => {
       </div>
       <div class="menubar">
         <span
+          title="show messages"
           class="messages-icon"
           :class="{ active: isUnseenMessages }"
           @click="toggleMessages"
           ><i class="far fa-comment-dots"></i
         ></span>
-        <span class="phone-icon" @click="handleEndCall">
-          <i class="fa fa-phone" aria-hidden="true"></i>
+        <span
+          class="stranger-college"
+          v-if="remoteVideoLoaded"
+          :title="strangerCollege"
+          >{{ strangerCollege }}</span
+        >
+        <span class="phone-icon" @click="handleEndCall" title="skip">
+          <i class="fas fa-forward"></i>
         </span>
       </div>
     </div>
@@ -512,8 +518,13 @@ onUnmounted(() => {
     height: 100%;
   }
   .stranger-college {
+    justify-self: start;
     display: inline-block;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
   }
   .remote-video-wrap {
     text-align: center;
@@ -593,11 +604,9 @@ onUnmounted(() => {
   color: white;
 
   background: red;
-  i {
-    transform: rotate(225deg);
-  }
+
   &:active i {
-    transform: rotate(225deg) scale(0.8);
+    transform: scale(0.8);
   }
 }
 

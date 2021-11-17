@@ -11,6 +11,7 @@ import { onMounted } from "@vue/runtime-core";
 import VueHcaptcha from "@hcaptcha/vue3-hcaptcha";
 import { isCollegeMail } from "../utils";
 import Footer from "../components/Footer.vue";
+import FaqSection from "../components/FaqSection.vue";
 
 const emailInput = ref("");
 const loading = ref(false);
@@ -228,6 +229,7 @@ onMounted(() => {
         <img src="../assets/landing_illustration.svg" alt="" />
       </div>
     </section>
+    <faq-section></faq-section>
     <Footer />
   </div>
 </template>

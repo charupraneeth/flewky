@@ -20,3 +20,8 @@ export interface Positions {
   movementX: number;
   movementY: number;
 }
+
+export interface Faq {
+  question: string;
+  answer: string;
+}
