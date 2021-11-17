@@ -15,6 +15,7 @@ import Report from "../components/Report.vue";
 const audioUrl = new URL("../assets/success.mp3", import.meta.url).href;
 // console.log(audioUrl);
 
+const isUnseenMessages = ref(false);
 const router = useRouter();
 const isMatched = ref<Boolean>(false);
 const isStrangerTyping = ref(false);
@@ -47,6 +48,7 @@ function toggleMessages() {
     messagesContainerWidth.value = 0;
     return;
   }
+  isUnseenMessages.value = false;
   if (isMobile.value) {
     messagesContainerWidth.value = 100;
     return;
@@ -86,7 +88,9 @@ function handleChannelError() {
 
 async function handleNewMessage(messageEvent: MessageEvent) {
   console.log("message evnet ", messageEvent);
-
+  if (!messagesContainerWidth.value) {
+    isUnseenMessages.value = true;
+  }
   const newMessage = messageEvent.data;
   console.log("msg recieved", newMessage);
   isStrangerTyping.value = false;
@@ -234,6 +238,8 @@ async function init() {
   }
   datachannel = null;
   isDataChannelOpen.value = false;
+
+  isUnseenMessages.value = false;
 
   clearInterval(remoteVideoTimer);
   console.log("is matched ", isMatched.value);
@@ -461,7 +467,10 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="menubar">
-        <span class="messages-icon" @click="toggleMessages"
+        <span
+          class="messages-icon"
+          :class="{ active: isUnseenMessages }"
+          @click="toggleMessages"
           ><i class="far fa-comment-dots"></i
         ></span>
         <span class="phone-icon" @click="handleEndCall">
@@ -542,6 +551,7 @@ onUnmounted(() => {
       border-radius: 10px;
       width: 100%;
       height: 100%;
+      min-width: 100px;
     }
   }
 }
@@ -564,6 +574,17 @@ onUnmounted(() => {
   color: white;
 
   background: $tertiary;
+  position: relative;
+
+  &.active::after {
+    content: "";
+    background-color: white;
+    width: 10px;
+    top: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+  }
 }
 .phone-icon {
   cursor: pointer;
