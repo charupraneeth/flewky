@@ -54,7 +54,9 @@ async function handleCapchaVerify(token: string, ekey: string) {
     if (json.message !== "success") {
       throw new Error();
     }
-    createToast("sucessfully sent email", { type: "info" });
+    createToast(`sucessfully sent email to ${emailInput.value}`, {
+      type: "info",
+    });
     isMailSent.value = true;
     loading.value = false;
   } catch (error: Error | any) {
