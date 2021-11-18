@@ -9,6 +9,7 @@ function handleReport() {
     gState.IO.emit("report");
     console.log("reporting");
     isDisabled.value = true;
+    createToast("reported!!!", { type: "info" });
   } catch (error) {
     createToast("failed to report");
   }
@@ -22,10 +23,7 @@ function handleReport() {
 </template>
 <style scoped lang="scss">
 .report-btn {
-  top: 15px;
-  right: 10px;
-  position: absolute;
-  z-index: 5;
+  cursor: pointer;
   padding: 0.5rem;
   background: red;
   color: $primary;

@@ -4,6 +4,7 @@
     <div></div>
     <div></div>
   </div>
+  <div>trying to match you...</div>
 </template>
 <style lang="scss">
 .lds-facebook {
@@ -18,7 +19,7 @@
   position: absolute;
   left: 8px;
   width: 16px;
-  background: $tertiary;
+  background: $secondary;
   animation: lds-facebook 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
 }
 .lds-facebook div:nth-child(1) {

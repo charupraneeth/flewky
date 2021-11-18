@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Loader from "../components/Loader.vue";
 import LoaderVideo from "../components/LoaderVideo.vue";
 // import TypingPlaceholder from "../components/TypingPlaceholder.vue";
 import { createToast } from "mosha-vue-toastify";
@@ -43,6 +42,8 @@ const isMobile = ref(document.documentElement.clientWidth < 760);
 const messagesContainerWidth = ref(0);
 
 function toggleMessages() {
+  if (!isMatched.value) return;
+  if (!isDataChannelOpen.value) return;
   const prevValue = messagesContainerWidth.value;
   if (prevValue) {
     messagesContainerWidth.value = 0;
@@ -394,11 +395,7 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <section class="section-loader" v-if="!isMatched">
-    <Loader /><small>trying to find you the right person...</small>
-  </section>
-  <section class="section-chat-dashboard" v-else>
-    <!-- <Report v-if="remoteVideoLoaded" /> -->
+  <section class="section-chat-dashboard">
     <div
       class="section-messages"
       :style="{ width: `${messagesContainerWidth}%` }"
@@ -423,7 +420,11 @@ onUnmounted(() => {
         <!-- <typing-placeholder v-if="isStrangerTyping" /> -->
       </div>
 
-      <div class="message-input" :disabled="isDataChannelOpen">
+      <div
+        class="message-input"
+        v-if="messagesContainerWidth"
+        :disabled="isDataChannelOpen"
+      >
         <input
           type="text"
           v-model="message"
@@ -452,7 +453,7 @@ onUnmounted(() => {
           </video>
         </div>
 
-        <LoaderVideo v-if="!remoteVideoLoaded" />
+        <LoaderVideo v-if="!isMatched || !remoteVideoLoaded" />
 
         <div class="remote-video-wrap" v-show="remoteVideoLoaded">
           <audio :src="audioUrl">this is audio</audio>
@@ -466,6 +467,7 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="menubar">
+        <report v-if="remoteVideoLoaded"></report>
         <span
           title="show messages"
           class="messages-icon"
@@ -473,15 +475,15 @@ onUnmounted(() => {
           @click="toggleMessages"
           ><i class="far fa-comment-dots"></i
         ></span>
+        <span class="phone-icon" @click="handleEndCall" title="skip">
+          <i class="fas fa-forward"></i>
+        </span>
         <span
           class="stranger-college"
           v-if="remoteVideoLoaded"
           :title="strangerCollege"
-          >{{ strangerCollege }}</span
+          >{{ "sasta.edu.indsfdsf" }}</span
         >
-        <span class="phone-icon" @click="handleEndCall" title="skip">
-          <i class="fas fa-forward"></i>
-        </span>
       </div>
     </div>
   </section>
@@ -495,16 +497,19 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  small {
+    color: $txt-primary;
+  }
 }
 .section-chat-dashboard {
   height: 100%;
   display: flex;
   position: relative;
   // overflow-y: hidden;
+  background: rgb(210, 224, 231);
 }
 
 .section-video {
-  background: rgb(210, 224, 231);
   overflow-y: hidden;
   width: 100%;
   height: 100%;
@@ -582,9 +587,9 @@ onUnmounted(() => {
   border-radius: 50%;
   padding: 1rem;
 
-  color: white;
+  color: $primary;
 
-  background: $tertiary;
+  background: $secondary;
   position: relative;
 
   &.active::after {
@@ -617,12 +622,12 @@ onUnmounted(() => {
   cursor: pointer;
 }
 .section-messages {
-  background: $primary;
   width: 700px;
   min-height: 200px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-right: 1px solid #eff3f4;
 
   .messages-container {
     overflow-y: auto;
@@ -640,8 +645,8 @@ onUnmounted(() => {
     .send-arrow {
       margin-left: 0.5rem;
       cursor: pointer;
-      color: white;
-      background: $tertiary;
+      color: $primary;
+      background: $secondary;
       padding: 1rem;
 
       border-radius: 50%;
@@ -686,7 +691,7 @@ onUnmounted(() => {
     border-radius: 12px;
     margin: 0 1rem;
     padding: 0.4rem 0.8rem;
-    background: $tertiary;
+    background: $txt-primary;
     color: $primary;
   }
   &.author {

@@ -125,7 +125,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="section-illustration">
-        <img src="../assets/landing_illustration.svg" alt="" />
+        <img src="../assets/conversation_illustration.svg" alt="" />
       </div>
     </section>
     <Footer />
