@@ -74,6 +74,7 @@ const handleCaptchaExpiry = () => {
 };
 const handleCaptchaError = () => {
   console.log("fail");
+  createToast("failed to render captcha, try reloading", { type: "danger" });
   captchaToken.value = "";
 };
 
@@ -168,7 +169,7 @@ onMounted(() => {
     <nav>
       <router-link class="logo" to="/">Flewky</router-link>
     </nav>
-    <section>
+    <section class="landing-section">
       <div class="left-section">
         <div class="email-form" v-if="!isMailSent">
           <div class="email-wrap">
@@ -202,6 +203,7 @@ onMounted(() => {
         <div class="vcode-form" v-else>
           <div class="vcode-wrap">
             <label for="email">Enter you verification code below</label>
+            <br />
             <br />
             <small
               >Mail not found? please check the promotions and spam
@@ -243,9 +245,10 @@ onMounted(() => {
 }
 
 .logo {
-  text-decoration: underline;
+  font-weight: bold;
+  text-decoration: none;
   color: $secondary;
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 .loader-section {
   height: 100%;
@@ -255,11 +258,14 @@ onMounted(() => {
   align-items: center;
 }
 
-section {
+.landing-section {
   display: flex;
+  justify-content: center;
+  min-height: 80vh;
 }
 .section-illustration {
   width: 100%;
+  display: flex;
   img {
     width: 100%;
     height: auto;

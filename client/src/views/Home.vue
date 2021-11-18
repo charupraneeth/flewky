@@ -149,7 +149,8 @@ onMounted(() => {
 }
 
 .logo {
-  text-decoration: underline;
+  font-weight: bold;
+  text-decoration: none;
   color: $secondary;
   font-size: 2rem;
 }
