@@ -127,6 +127,7 @@ async function handleSend() {
 }
 
 async function handleEndCall() {
+  if (!isMatched.value) return;
   gState.IO.emit("endCall");
   await init();
 }
