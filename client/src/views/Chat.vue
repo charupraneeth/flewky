@@ -483,7 +483,7 @@ onUnmounted(() => {
           class="stranger-college"
           v-if="remoteVideoLoaded"
           :title="strangerCollege"
-          >{{ "sasta.edu.indsfdsf" }}</span
+          >{{ strangerCollege }}</span
         >
       </div>
     </div>
