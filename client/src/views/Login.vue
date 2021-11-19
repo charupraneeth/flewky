@@ -2,6 +2,7 @@
 import { ref } from "@vue/reactivity";
 import { createToast } from "mosha-vue-toastify";
 import Loader from "../components/Loader.vue";
+import Navbar from "../components/Navbar.vue";
 import ismail from "ismail";
 import { Jiglag } from "../@types";
 import router from "../router";
@@ -166,9 +167,7 @@ onMounted(() => {
     <Loader />
   </section>
   <div class="login-container" v-else>
-    <nav>
-      <router-link class="logo" to="/">Flewky</router-link>
-    </nav>
+    <Navbar />
     <section class="landing-section">
       <div class="left-section">
         <div class="email-form" v-if="!isMailSent">
@@ -244,12 +243,6 @@ onMounted(() => {
   justify-content: space-between;
 }
 
-.logo {
-  font-weight: bold;
-  text-decoration: none;
-  color: $secondary;
-  font-size: 1.5rem;
-}
 .loader-section {
   height: 100%;
   width: 100%;

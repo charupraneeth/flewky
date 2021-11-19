@@ -7,6 +7,7 @@ import { createToast } from "mosha-vue-toastify";
 import "mosha-vue-toastify/dist/style.css";
 
 import Loader from "../components/Loader.vue";
+import Navbar from "../components/Navbar.vue";
 import { Jiglag } from "../@types";
 import Footer from "../components/Footer.vue";
 
@@ -99,12 +100,11 @@ onMounted(() => {
     <Loader />
   </section>
   <div class="home-container" v-else>
-    <nav class="navbar">
-      <router-link class="logo" to="/">Flewky</router-link>
+    <navbar>
       <button class="btn" @click="handleSignout">
         sign out <i class="fas fa-sign-out-alt"></i>
       </button>
-    </nav>
+    </navbar>
     <section>
       <div class="section-intro">
         <div class="headline">
@@ -153,11 +153,6 @@ onMounted(() => {
   text-decoration: none;
   color: $secondary;
   font-size: 2rem;
-}
-nav.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 section {
