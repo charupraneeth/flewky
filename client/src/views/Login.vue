@@ -230,7 +230,7 @@ onMounted(() => {
         <img src="../assets/landing_illustration.svg" alt="" />
       </div>
     </section>
-    <faq-section></faq-section>
+    <faq-section v-if="!isMailSent"></faq-section>
     <Footer />
   </div>
 </template>
