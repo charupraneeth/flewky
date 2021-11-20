@@ -3,6 +3,7 @@ import { Socket } from "socket.io-client";
 export interface GlobalState {
   IO: Socket;
   email: string;
+  isMobile: boolean;
 }
 
 export interface Jiglag {

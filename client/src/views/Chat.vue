@@ -5,13 +5,20 @@ import { createToast } from "mosha-vue-toastify";
 // import the styling for the toast
 import "mosha-vue-toastify/dist/style.css";
 
-import { onMounted, onUnmounted, ref, watchEffect } from "@vue/runtime-core";
+import {
+  onMounted,
+  onUnmounted,
+  ref,
+  watchEffect,
+  toRef,
+} from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { Message, Positions } from "../@types";
 import gState from "../store";
 import Report from "../components/Report.vue";
+import StrangerCollege from "../components/StrangerCollege.vue";
 // import { iceConfig } from "../consts";
-const audioUrl = new URL("../assets/success.mp3", import.meta.url).href;
+const audioUrl = new URL("../assets/matched.mp3", import.meta.url).href;
 // console.log(audioUrl);
 
 const isUnseenMessages = ref(false);
@@ -37,7 +44,7 @@ let remoteVideoTimer = null as any;
 const localVideoEl = ref<HTMLVideoElement>(null as any);
 const remoteVideoEl = ref<HTMLVideoElement>(null as any);
 
-const isMobile = ref(document.documentElement.clientWidth < 760);
+const isMobile = toRef(gState, "isMobile");
 
 const messagesContainerWidth = ref(0);
 
@@ -63,15 +70,15 @@ function handleResize() {
 
 // let isTypingTimeout: ReturnType<typeof setTimeout>;
 
-const positions: Positions = {
-  clientX: undefined,
-  clientY: undefined,
-  movementX: 0,
-  movementY: 0,
-};
+// const positions: Positions = {
+//   clientX: undefined,
+//   clientY: undefined,
+//   movementX: 0,
+//   movementY: 0,
+// };
 
 async function handleRemoteVideoLoad() {
-  // await document.querySelector("audio")?.play();
+  await document.querySelector("audio")?.play();
   remoteVideoLoaded.value = true;
 }
 function handleChannelOpen() {
@@ -156,6 +163,7 @@ function handleConnectionStateChange() {
 }
 async function handleRemoteTrack(event: RTCTrackEvent) {
   console.log("pc2 received remote stream");
+
   // console.log(event);
   remoteStream = event.streams[0];
   remoteVideoEl.value.srcObject = remoteStream;
@@ -250,6 +258,8 @@ async function init() {
   remoteStream = new MediaStream();
   messages.value = [];
   message.value = "";
+  strangerCollege.value = "";
+
   remoteVideoLoaded.value = false;
   if (!gState.IO.id) {
     router.push("/");
@@ -467,7 +477,7 @@ onUnmounted(() => {
           ></video>
         </div>
       </div>
-      <div class="menubar">
+      <div class="menubar" v-show="isMatched">
         <report v-if="remoteVideoLoaded"></report>
         <span
           title="show messages"
@@ -479,12 +489,7 @@ onUnmounted(() => {
         <span class="phone-icon" @click="handleEndCall" title="skip">
           <i class="fas fa-forward"></i>
         </span>
-        <span
-          class="stranger-college"
-          v-if="remoteVideoLoaded"
-          :title="strangerCollege"
-          >{{ strangerCollege }}</span
-        >
+        <StrangerCollege :college="strangerCollege" />
       </div>
     </div>
   </section>
@@ -514,6 +519,7 @@ onUnmounted(() => {
   overflow-y: hidden;
   width: 100%;
   height: 100%;
+  max-width: 100%;
   .video-wrap {
     position: relative;
     display: flex;
@@ -523,15 +529,7 @@ onUnmounted(() => {
     max-height: 90%;
     height: 100%;
   }
-  .stranger-college {
-    justify-self: start;
-    display: inline-block;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100px;
-  }
+
   .remote-video-wrap {
     text-align: center;
 
@@ -578,6 +576,7 @@ onUnmounted(() => {
   height: 10%;
   justify-content: center;
   align-items: center;
+  position: relative;
   & > * {
     margin: 0 1rem;
   }
