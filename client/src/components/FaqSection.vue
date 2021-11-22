@@ -23,6 +23,11 @@ const faqs = [
       "An important feature of Flewky is that the site uses a technology called webRTC, which is a peer to peer protocol, which means most of your communications are directly done among user devices rather than going through a server.",
   },
   {
+    question: "What is session expired?",
+    answer:
+      "Once you login using your email your session is valid for the next 24 hours, once it's expired your session gets expired",
+  },
+  {
     question: "Don't find your questions here?",
     answer: "Feel free to mail us at support@flewky.com",
   },

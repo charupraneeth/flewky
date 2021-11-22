@@ -14,7 +14,9 @@ const props = defineProps<{
       <div class="accordion-summary__content">
         {{ props.faq.question }}
       </div>
-      <div class="arrow"><i class="fas fa-sort-down"></i></div>
+      <div class="arrow" :class="{ active: isShown }">
+        <i class="fas fa-sort-down"></i>
+      </div>
     </div>
     <div class="accordion-content" v-show="isShown">
       {{ props.faq.answer }}
@@ -43,5 +45,10 @@ const props = defineProps<{
 }
 .arrow {
   text-align: right;
+  transition: transform 0.3s ease;
+  font-size: 1.5rem;
+  &.active {
+    transform: rotate(180deg);
+  }
 }
 </style>
