@@ -14,6 +14,7 @@
 footer {
   text-align: center;
   margin-top: 1.5rem;
+  padding: 0.5rem 0;
 }
 .mail {
   color: $tertiary;
