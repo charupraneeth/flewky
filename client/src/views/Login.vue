@@ -172,7 +172,7 @@ onMounted(() => {
       <div class="left-section">
         <div class="email-form" v-if="!isMailSent">
           <div class="email-wrap">
-            <label for="email">Enter you email below</label>
+            <label for="email">Enter you college email below</label>
             <input
               v-model="emailInput"
               class="email"
