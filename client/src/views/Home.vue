@@ -108,7 +108,7 @@ onMounted(() => {
     <section>
       <div class="section-intro">
         <div class="headline">
-          <h1>From strangers to friends the journey just got easy</h1>
+          <h1>Stangers are just friends waiting to happen</h1>
         </div>
         <div class="call-to-action">
           <h3 class="call-to-action__label">Click below</h3>
@@ -119,7 +119,7 @@ onMounted(() => {
               @click="handleConnect"
               :disabled="isGoDisabled"
             >
-              go
+              Go
             </button>
           </div>
         </div>
