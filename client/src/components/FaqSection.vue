@@ -13,6 +13,11 @@ const faqs = [
       "No, we do not store any of our users data, except when you are banned.",
   },
   {
+    question: "Why is it connecting me to the same person again?",
+    answer:
+      "We know it's annoying but it has to do with the number of active users. The more the number of users the more unlikely that your are matched to the same user",
+  },
+  {
     question: "What is so special about Flewky?",
     answer:
       "An important feature of Flewky is that the site uses a technology called webRTC, which is a peer to peer protocol, which means most of your communications are directly done among user devices rather than going through a server.",
