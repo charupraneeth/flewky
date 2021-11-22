@@ -9,7 +9,7 @@ function genToken(email: string) {
       data: email,
     },
     process.env.JWT_SECRET as any,
-    { expiresIn: "1d" }
+    { expiresIn: "3d" }
   );
   return token;
 }
