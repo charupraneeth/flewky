@@ -50,7 +50,7 @@ function handleConnect() {
       console.log("connect_error ", err);
       gState.IO.disconnect();
       if (err.message.includes("jwt")) {
-        createToast("prev token expired, login again", { type: "warning" });
+        createToast("session expired, login again", { type: "warning" });
         localStorage.clear();
         console.log("pushing");
         gState.IO = {} as any;
