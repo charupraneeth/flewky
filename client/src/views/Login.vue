@@ -319,6 +319,10 @@ button {
   section {
     flex-direction: column-reverse;
   }
+
+  .landing-section {
+    min-height: unset;
+  }
   .section-illustration {
     margin-top: 0;
   }
