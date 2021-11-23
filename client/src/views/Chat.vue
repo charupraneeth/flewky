@@ -134,6 +134,10 @@ async function handleSend() {
 }
 
 async function handleEndCall() {
+  router.push("/");
+}
+
+async function handleSkipCall() {
   if (!isMatched.value) return;
   gState.IO.emit("endCall");
   await init();
@@ -175,7 +179,7 @@ async function handleMatchSuccess(chatMetaData: any) {
     remoteVideoTimer = setTimeout(async () => {
       if (!remoteVideoLoaded.value) {
         console.log("no remote video found");
-        await handleEndCall();
+        await handleSkipCall();
       } else {
         console.log("remote video loaded");
       }
@@ -399,6 +403,13 @@ onUnmounted(() => {
       track.stop();
     });
   }
+  localStream = new MediaStream();
+  if (remoteStream) {
+    remoteStream.getTracks().forEach(function (track) {
+      track.stop();
+    });
+  }
+  remoteStream = new MediaStream();
   if (pc) pc.close();
   gState.IO.disconnect && gState.IO.disconnect();
   window.removeEventListener("resize", handleResize);
@@ -487,6 +498,9 @@ onUnmounted(() => {
           ><i class="far fa-comment-dots"></i
         ></span>
         <span class="phone-icon" @click="handleEndCall" title="skip">
+          <i class="fas fa-phone"></i>
+        </span>
+        <span class="skip-icon" @click="handleSkipCall" title="skip">
           <i class="fas fa-forward"></i>
         </span>
         <StrangerCollege :college="strangerCollege" />
@@ -606,9 +620,24 @@ onUnmounted(() => {
   cursor: pointer;
   border-radius: 50%;
   padding: 1rem;
-  color: white;
+  color: $primary;
 
   background: red;
+  // transform: rotate(230deg);
+  i {
+    transform: rotate(-135deg);
+  }
+  &:active i {
+    transform: rotate(-135deg) scale(0.8);
+  }
+}
+.skip-icon {
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 1rem;
+  color: $primary;
+
+  background: $secondary;
 
   &:active i {
     transform: scale(0.8);
