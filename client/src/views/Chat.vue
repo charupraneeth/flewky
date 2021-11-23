@@ -57,6 +57,7 @@ function toggleMessages() {
     return;
   }
   isUnseenMessages.value = false;
+  messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   if (isMobile.value) {
     messagesContainerWidth.value = 100;
     return;
@@ -488,19 +489,26 @@ onUnmounted(() => {
           ></video>
         </div>
       </div>
-      <div class="menubar" v-show="isMatched">
+      <div class="menubar">
         <report v-if="remoteVideoLoaded"></report>
         <span
           title="show messages"
           class="messages-icon"
+          :style="{ opacity: isMatched ? 1 : 0.5 }"
           :class="{ active: isUnseenMessages }"
           @click="toggleMessages"
           ><i class="far fa-comment-dots"></i
         ></span>
-        <span class="phone-icon" @click="handleEndCall" title="skip">
+        <span class="phone-icon" @click="handleEndCall" title="end">
           <i class="fas fa-phone"></i>
         </span>
-        <span class="skip-icon" @click="handleSkipCall" title="skip">
+
+        <span
+          class="skip-icon"
+          :style="{ opacity: isMatched ? 1 : 0.5 }"
+          @click="handleSkipCall"
+          title="skip"
+        >
           <i class="fas fa-forward"></i>
         </span>
         <StrangerCollege :college="strangerCollege" />

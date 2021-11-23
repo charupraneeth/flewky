@@ -17,7 +17,12 @@ function handleReport() {
 </script>
 
 <template>
-  <button @click="handleReport" class="btn report-btn" :disabled="isDisabled">
+  <button
+    title="report"
+    @click="handleReport"
+    class="btn report-btn"
+    :disabled="isDisabled"
+  >
     Report
   </button>
 </template>
