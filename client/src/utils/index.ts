@@ -3,9 +3,7 @@ const adminMails = [
   "admin@flewky.com",
   "ceo@flewky.com",
   "sreeg459@gmail.com",
-  "charsproteney@gmail.com",
   "farmingtong123@gmail.com",
-  "charupraneeth@gmail.com",
   "bhanuprakash.svchs@gmail.com",
 ];
 

@@ -1,7 +1,7 @@
 const mailEndings = [".edu.in", ".ac.in", ".edu"];
 
 const getCollege = (email: string): string => {
-  if (adminMails.includes(email)) return "admin";
+  if (adminMails.includes(email)) return "srmist.edu.in.";
   return email.substring(email.lastIndexOf("@") + 1);
 };
 
@@ -9,8 +9,6 @@ const adminMails = [
   "admin@flewky.com",
   "ceo@flewky.com",
   "sreeg459@gmail.com",
-  "charsproteney@gmail.com",
-  "charupraneeth@gmail.com",
   "bhanuprakash.svchs@gmail.com",
   "farmingtong123@gmail.com",
 ];

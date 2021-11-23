@@ -138,8 +138,14 @@ io.use(async (socket, next) => {
         } else {
           console.log("decoded ", decoded);
           const { data: email } = decoded;
-          if (!email) next(new Error("email not found in token"));
-          if (!isCollegeMail(email)) next(new Error("invalid token mail"));
+          if (!email) {
+            next(new Error("email not found in token"));
+            return;
+          }
+          if (!isCollegeMail(email)) {
+            next(new Error("invalid token mail"));
+            return;
+          }
           const reports = await redis.get(`ban:${email}`);
           if (reports && parseInt(reports) >= maxReports) {
             next(new Error("you have been banned for inppropriate acivity"));
@@ -169,6 +175,7 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
   console.log(`socketd connected `, socket.id);
+  if (socket.disconnected) return;
   twilioClient.tokens
     .create({ ttl: 3600 + 120 })
     .then((token) => {
