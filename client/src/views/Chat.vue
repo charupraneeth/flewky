@@ -33,6 +33,8 @@ const strangerCollege = ref("");
 const isDataChannelOpen = ref(false);
 const remoteVideoLoaded = ref(false);
 
+let unmatchedTimeout: NodeJS.Timeout;
+
 let localStream: MediaStream;
 let remoteStream: MediaStream = new MediaStream();
 
@@ -132,7 +134,7 @@ async function handleSend() {
   message.value = "";
 }
 
-async function handleEndCall() {
+function handleEndCall() {
   console.log("ending call");
   router.push("/");
 }
@@ -176,15 +178,19 @@ async function handleRemoteTrack(event: RTCTrackEvent) {
 
 async function handleMatchSuccess(chatMetaData: any) {
   try {
-    remoteVideoTimer = setTimeout(async () => {
+    remoteVideoTimer = setTimeout(() => {
       if (!remoteVideoLoaded.value) {
         console.log("no remote video found");
-        await handleSkipCall();
+        handleSkipCall();
       } else {
         console.log("remote video loaded");
       }
     }, 20000);
     // console.log("metadata ", chatMetaData);
+    if (unmatchedTimeout) {
+      console.log("cleared timeout");
+      clearTimeout(unmatchedTimeout);
+    }
 
     isMatched.value = true;
     strangerCollege.value = chatMetaData?.strangerCollege;
@@ -294,6 +300,15 @@ async function init() {
     return;
   }
   gState.IO.emit("connectNewUser");
+
+  unmatchedTimeout = setTimeout(() => {
+    if (!isMatched.value) {
+      createToast("unable to match due to inadquate users, try again later", {
+        type: "info",
+      });
+      handleEndCall();
+    }
+  }, 1000 * 60 * 5);
 
   gState.IO.on("matchSuccess", (chatMetaData: any) => {
     handleMatchSuccess(chatMetaData);
