@@ -5,6 +5,7 @@ const gState: GlobalState = reactive({
   IO: {} as any,
   email: "",
   isMobile: document.documentElement.clientWidth < 760,
+  localStream: null,
 });
 
 export default gState;

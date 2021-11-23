@@ -4,6 +4,7 @@ export interface GlobalState {
   IO: Socket;
   email: string;
   isMobile: boolean;
+  localStream: MediaStream | null;
 }
 
 export interface Jiglag {

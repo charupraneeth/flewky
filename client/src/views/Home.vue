@@ -24,13 +24,23 @@ function handleSignout() {
   router.push("/login");
 }
 
-function handleConnect() {
+async function handleConnect() {
   isGoDisabled.value = true;
   if (!token.value) {
     router.push("/login");
   }
 
   try {
+    gState.localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    if (!gState.localStream || !gState.localStream?.active) {
+      createToast("video and audio is required", { type: "info" });
+      return;
+    }
+
     const ioObject: Socket = io(import.meta.env.VITE_SERVER_URL, {
       transports: ["websocket"],
       auth: {
@@ -67,6 +77,13 @@ function handleConnect() {
   } catch (error: any) {
     isGoDisabled.value = false;
     console.log(error);
+    if (
+      error?.message.includes(
+        "The request is not allowed by the user agent or the platform in the current context"
+      )
+    ) {
+      createToast("please enable audio and video", { type: "warning" });
+    }
     createToast(error.message || "failed to connect socket", {
       type: "warning",
     });

@@ -279,31 +279,27 @@ async function init() {
 
   gState.IO.off();
 
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-
-    localStream.getTracks().forEach((track) => {
-      track.addEventListener("ended", () => {
-        console.log("local track ended");
-        createToast("local video ended/disabled", { type: "danger" });
-        router.push("/");
-      });
-      pc.addTrack(track, localStream);
-    });
-  } catch (error) {
-    createToast("video is required", { type: "danger" });
-    console.log(error);
-    router.push("/");
+  if (!gState.localStream || !gState.localStream?.active) {
+    createToast("video is neededed third", { type: "info" });
+    handleEndCall();
     return;
   }
+  localStream = gState.localStream;
+
+  localStream.getTracks().forEach((track) => {
+    track.addEventListener("ended", () => {
+      console.log("local track ended");
+      createToast("local video ended/disabled", { type: "danger" });
+      router.push("/");
+    });
+    pc.addTrack(track, localStream);
+  });
+
   gState.IO.emit("connectNewUser");
 
   unmatchedTimeout = setTimeout(() => {
     if (!isMatched.value) {
-      createToast("unable to match due to inadquate users, try again later", {
+      createToast("failed to find a match, try again later", {
         type: "info",
       });
       handleEndCall();
@@ -423,6 +419,7 @@ onUnmounted(() => {
     localStream.getTracks().forEach(function (track) {
       track.stop();
     });
+    gState.localStream = null;
   }
   localStream = new MediaStream();
   if (remoteStream) {
