@@ -59,6 +59,13 @@ async function handleConnect() {
     gState.IO.on("connect_error", (err) => {
       console.log("connect_error ", err);
       gState.IO.disconnect();
+      if (gState.localStream && gState.localStream.active) {
+        gState.localStream.getTracks().forEach((track) => {
+          track.stop();
+        });
+      }
+      gState.localStream = null;
+
       if (err.message.includes("jwt")) {
         createToast("session expired, login again", { type: "warning" });
         localStorage.clear();
@@ -125,7 +132,7 @@ onMounted(() => {
     <section>
       <div class="section-intro">
         <div class="headline">
-          <h1>Stangers are just friends waiting to happen</h1>
+          <h1>Strangers are just friends waiting to happen</h1>
         </div>
         <div class="call-to-action">
           <h3 class="call-to-action__label">Click below</h3>
