@@ -96,12 +96,10 @@ function handleChannelError() {
 }
 
 async function handleNewMessage(messageEvent: MessageEvent) {
-  console.log("message evnet ", messageEvent);
   if (!messagesContainerWidth.value) {
     isUnseenMessages.value = true;
   }
   const newMessage = messageEvent.data;
-  console.log("msg recieved", newMessage);
   isStrangerTyping.value = false;
   messages.value.push({ content: newMessage, isAuthor: false });
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -135,6 +133,7 @@ async function handleSend() {
 }
 
 async function handleEndCall() {
+  console.log("ending call");
   router.push("/");
 }
 
@@ -391,9 +390,15 @@ onMounted(async () => {
     if (iceServers) {
       configuration.iceServers = iceServers;
     }
-    console.log("recieved ice servers ", iceServers);
+    console.log("ice");
 
     init();
+
+    // end connection after 1hr on recieving ice servers
+    setTimeout(() => {
+      handleEndCall();
+      createToast("please join again", { type: "info" });
+    }, 1000 * 60 * 60);
   });
   console.log("not matched");
 });
