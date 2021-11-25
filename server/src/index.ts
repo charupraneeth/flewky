@@ -29,6 +29,7 @@ import { getCollege, isCollegeMail } from "./utils/validateMail";
 import { SocketData } from "./@types";
 import { rlSocketClient } from "./middlewares/rateLimit";
 import { Twilio } from "twilio";
+import { createAdapter } from "@socket.io/redis-adapter";
 
 config({ path: path.join(__dirname, "../.env") });
 
@@ -60,6 +61,12 @@ const io = new Server(server, {
     origin: corsWhitelist,
   },
 });
+
+const pubClient = redis;
+const subClient = pubClient.duplicate();
+
+// @ts-ignore
+io.adapter(createAdapter(pubClient, subClient));
 
 async function matchUser(socket: Socket) {
   if (!(await isUnmatchedUsers())) {
