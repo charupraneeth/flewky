@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@alicloud/pop-core": "^1.7.10",
     "@socket.io/redis-adapter": "^7.0.1",
     "aws-sdk": "^2.1041.0",
     "axios": "^0.21.4",

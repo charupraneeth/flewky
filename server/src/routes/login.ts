@@ -1,9 +1,8 @@
 import express, { Request, Response, NextFunction } from "express";
 import { config } from "dotenv";
 import path from "path";
-import aws from "aws-sdk";
+import Core from "@alicloud/pop-core";
 
-aws.config.update({ region: process.env.SES_REGION });
 config({ path: path.join(__dirname, "../../.env") });
 
 import generateCode from "../utils/randomCode";
@@ -17,37 +16,37 @@ import mailParams from "../utils/mailParams";
 
 const router = express.Router();
 
-const ses = new aws.SES();
+const client = new Core({
+  accessKeyId: process.env.DM_ACCESS_KEY_ID!,
+  accessKeySecret: process.env.DM_SECRET_ACCESS_KEY!,
+  endpoint: process.env.DM_ENDPOINT!,
+  apiVersion: process.env.DM_API_VERSION!,
+});
 
 router.post(
   "/",
   [rateLimiterLogin, checkEmail, checkBan, verifyRecaptcha],
-  (req: Request, res: Response, next: NextFunction) => {
-    const { email }: { email: string } = req.body;
-    const code = generateCode();
-    const params = mailParams(code, email, req.ip);
-    ses.sendEmail(params, async function (err, data) {
-      // If something goes wrong, print an error message.
-      try {
-        if (err) {
-          throw err;
-        } else {
-          console.log("Email sent! Message ID: ", data.MessageId);
-          await setEx(email, expiry, code);
-          res.json({
-            message: "success",
-            error: "",
-          });
-        }
-      } catch (error: Error | any) {
-        console.error(error);
-
-        if (error.response) {
-          error.message = error.response;
-        }
-        next(error);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email }: { email: string } = req.body;
+      const code = generateCode();
+      const params = mailParams(code, email, req.ip);
+      const mailResponse = await client.request("SingleSendMail", params, {
+        method: "POST",
+      });
+      console.log(mailResponse);
+      await setEx(email, expiry, code);
+      res.json({
+        message: "success",
+        error: "",
+      });
+    } catch (error: Error | any) {
+      console.error(error);
+      if (error.response) {
+        error.message = error.response;
       }
-    });
+      next(error);
+    }
   }
 );
 

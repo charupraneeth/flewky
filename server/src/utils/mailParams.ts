@@ -249,41 +249,31 @@ body {font-family: 'Chivo', sans-serif;}
     </body>
   </html>`;
 
-const getSubject = (ipAddress: string, dateString: string) =>
-  `Flewky login request - from ${ipAddress} on ${dateString}`;
+const getSubject = (ipAddress: string, dateString: string) => {
+  let subj = `Flewky login request - from ${ipAddress} on ${dateString}`;
+  if (subj.length >= 100) {
+    subj = `Flewky login request - from ${ipAddress}`;
+  }
+  return subj;
+};
 
-const getBodyText = (ipAddress: string, dateString: string, code: string) =>
-  `Flewky login request - code ${code}`;
-
-const sender = "Admin <admin@flewky.com>";
-const configuration_set = "ses-admin-config-set";
-const charset = "UTF-8";
+const bodyText = (ipAddress: string, dateString: string, code: string) =>
+  `Flewky login request - from ip address: ${ipAddress} - on ${dateString} \n your verification code is - ${code}`;
 
 // Specify the parameters to pass to the API.
 const mailParams = (code: string, toAddress: string, ip: string) => {
-  const dateString = new Date().toString();
+  const dateString = new Date().toUTCString();
+
   return {
-    Source: sender,
-    Destination: {
-      ToAddresses: [toAddress],
-    },
-    Message: {
-      Subject: {
-        Data: getSubject(ip, dateString),
-        Charset: charset,
-      },
-      Body: {
-        Text: {
-          Data: getBodyText(ip, dateString, code),
-          Charset: charset,
-        },
-        Html: {
-          Data: bodyHtml(code),
-          Charset: charset,
-        },
-      },
-    },
-    ConfigurationSetName: configuration_set,
+    RegionId: "ap-southeast-1",
+    AccountName: "admin@mail.flewky.com",
+    AddressType: 1,
+    ReplyToAddress: true,
+    ToAddress: toAddress,
+    Subject: getSubject(ip, dateString),
+    HtmlBody: bodyHtml(code),
+    TextBody: bodyText(ip, dateString, code),
+    FromAlias: "Admin",
   };
 };
 
