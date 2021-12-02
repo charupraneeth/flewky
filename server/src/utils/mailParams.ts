@@ -1,4 +1,4 @@
-const mailTemplate = (
+const bodyHtml = (
   code: string
 ) => `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html data-editor-version="2" class="sg-campaigns" xmlns="http://www.w3.org/1999/xhtml">
@@ -249,12 +249,42 @@ body {font-family: 'Chivo', sans-serif;}
     </body>
   </html>`;
 
-const mailMessage = (code: string, to: string) => ({
-  to,
-  from: "admin@flewky.com", // Use the email address or domain you verified above
-  subject: "Flewky login request",
-  text: `login request - ${code}`,
-  html: mailTemplate(code),
-});
+const getSubject = (ipAddress: string, dateString: string) =>
+  `Flewky login request - from ${ipAddress} on ${dateString}`;
 
-export default mailMessage;
+const getBodyText = (ipAddress: string, dateString: string, code: string) =>
+  `Flewky login request - code ${code}`;
+
+const sender = "Admin <admin@flewky.com>";
+const configuration_set = "ses-admin-config-set";
+const charset = "UTF-8";
+
+// Specify the parameters to pass to the API.
+const mailParams = (code: string, toAddress: string, ip: string) => {
+  const dateString = new Date().toString();
+  return {
+    Source: sender,
+    Destination: {
+      ToAddresses: [toAddress],
+    },
+    Message: {
+      Subject: {
+        Data: getSubject(ip, dateString),
+        Charset: charset,
+      },
+      Body: {
+        Text: {
+          Data: getBodyText(ip, dateString, code),
+          Charset: charset,
+        },
+        Html: {
+          Data: bodyHtml(code),
+          Charset: charset,
+        },
+      },
+    },
+    ConfigurationSetName: configuration_set,
+  };
+};
+
+export default mailParams;
