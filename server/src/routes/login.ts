@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import { config } from "dotenv";
 import path from "path";
-import Core from "@alicloud/pop-core";
+import TakeoutClient from "takeout.js";
 
 config({ path: path.join(__dirname, "../../.env") });
 
@@ -16,12 +16,14 @@ import mailParams from "../utils/mailParams";
 
 const router = express.Router();
 
-const client = new Core({
-  accessKeyId: process.env.DM_ACCESS_KEY_ID!,
-  accessKeySecret: process.env.DM_SECRET_ACCESS_KEY!,
-  endpoint: process.env.DM_ENDPOINT!,
-  apiVersion: process.env.DM_API_VERSION!,
-});
+// const client = new Core({
+//   accessKeyId: process.env.DM_ACCESS_KEY_ID!,
+//   accessKeySecret: process.env.DM_SECRET_ACCESS_KEY!,
+//   endpoint: process.env.DM_ENDPOINT!,
+//   apiVersion: process.env.DM_API_VERSION!,
+// });
+const client = new TakeoutClient();
+client.login(process.env.TAKEOUT_TOKEN);
 
 router.post(
   "/",
@@ -31,9 +33,7 @@ router.post(
       const { email }: { email: string } = req.body;
       const code = generateCode();
       const params = mailParams(code, email, req.ip);
-      const mailResponse = await client.request("SingleSendMail", params, {
-        method: "POST",
-      });
+      const mailResponse = await client.send(params);
       console.log(mailResponse);
       await setEx(email, expiry, code);
       res.json({

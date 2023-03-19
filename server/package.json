@@ -12,7 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@alicloud/pop-core": "^1.7.10",
     "@socket.io/redis-adapter": "^7.0.1",
     "axios": "^0.21.4",
     "cors": "^2.8.5",
@@ -24,6 +23,7 @@
     "jsonwebtoken": "^8.5.1",
     "rate-limiter-flexible": "^2.3.1",
     "socket.io": "^4.2.0",
+    "takeout.js": "^1.3.1",
     "twilio": "^3.71.1"
   },
   "devDependencies": {

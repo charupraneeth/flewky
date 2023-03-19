@@ -265,15 +265,11 @@ const mailParams = (code: string, toAddress: string, ip: string) => {
   const dateString = new Date().toUTCString();
 
   return {
-    RegionId: "ap-southeast-1",
-    AccountName: "admin@mail.flewky.com",
-    AddressType: 1,
-    ReplyToAddress: true,
-    ToAddress: toAddress,
-    Subject: getSubject(ip, dateString),
-    HtmlBody: bodyHtml(code),
-    TextBody: bodyText(ip, dateString, code),
-    FromAlias: "Admin",
+    to: toAddress,
+    from: "Flewky Login Bot",
+    subject: getSubject(ip, dateString),
+    text: bodyText(ip, dateString, code),
+    html: bodyHtml(code),
   };
 };
 

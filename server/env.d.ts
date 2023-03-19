@@ -6,6 +6,7 @@ declare global {
       DM_ACCESS_KEY_ID: string;
       DM_SECRET_ACCESS_KEY: string;
       DM_API_VERSION: string;
+      TAKEOUT_TOKEN: string;
     }
   }
 }
