@@ -2,17 +2,17 @@
 # All deploys from the main repository branch
 # will inherit these settings.
 [context.production.environment]
-    VITE_SERVER_URL = "https://wiii-api.herokuapp.com"
+    VITE_SERVER_URL = "https://flewky.up.railway.app"
 
 # Deploy Preview context:
 # All deploys generated from a pull/merge request
 # will inherit these settings.
 [context.deploy-preview.environment]
-    VITE_SERVER_URL = "https://wiii-api.herokuapp.com"
+    VITE_SERVER_URL = "https://flewky.up.railway.app"
 
 # Specific branch context:
 # Deploys from this branch will take these settings
 # and override their current ones.
 [context.dev.environment]
-    VITE_SERVER_URL = "https://wiii-api.herokuapp.com"
+    VITE_SERVER_URL = "https://flewky.up.railway.app"
 
