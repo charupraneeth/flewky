@@ -17,6 +17,7 @@ export const corsWhitelist =
         "https://www.flewky.com",
         "https://dev.flewky.com",
         "https://dev.flewky.com",
+        "https://flewky.netlify.app",
       ]
     : "*";
 
