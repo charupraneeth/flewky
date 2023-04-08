@@ -12,13 +12,7 @@ export const maxReports = 6;
 
 export const corsWhitelist =
   inProd || inStaging
-    ? [
-        "https://flewky.com",
-        "https://www.flewky.com",
-        "https://dev.flewky.com",
-        "https://dev.flewky.com",
-        "https://flewky.netlify.app",
-      ]
+    ? ["https://flewky.thisapp.works", "https://flewky.netlify.app"]
     : "*";
 
 export const queueName = inProd && !inStaging ? "unmatched" : "dev:unmatched";
